@@ -1,0 +1,132 @@
+{
+  "episode_id": "ep-609dcc4377",
+  "issues": [
+    {
+      "type": "payment_allocation_gap",
+      "affected_ids": [
+        "PAY-0040",
+        "INV-0021",
+        "LED-000277",
+        "LED-000278",
+        "LED-000279"
+      ],
+      "expected_amount_minor": 410400,
+      "currency": "KZT",
+      "allowed_evidence_sets": [
+        [
+          "PAY-0040",
+          "INV-0021",
+          "LED-000277",
+          "LED-000278"
+        ],
+        [
+          "PAY-0040",
+          "INV-0021",
+          "LED-000277",
+          "LED-000278",
+          "LED-000279"
+        ]
+      ],
+      "explanation": "The payment covers the invoice but part of the receipt was not allocated; receivables stay overstated.",
+      "issue_id": "ISS-0001"
+    },
+    {
+      "type": "payment_allocation_gap",
+      "affected_ids": [
+        "PAY-0041",
+        "INV-0002",
+        "LED-000280",
+        "LED-000281",
+        "LED-000282"
+      ],
+      "expected_amount_minor": 4137600,
+      "currency": "KZT",
+      "allowed_evidence_sets": [
+        [
+          "PAY-0041",
+          "INV-0002",
+          "LED-000280",
+          "LED-000281"
+        ],
+        [
+          "PAY-0041",
+          "INV-0002",
+          "LED-000280",
+          "LED-000281",
+          "LED-000282"
+        ]
+      ],
+      "explanation": "The payment covers the invoice but part of the receipt was not allocated; receivables stay overstated.",
+      "issue_id": "ISS-0002"
+    },
+    {
+      "type": "period_cutoff",
+      "affected_ids": [
+        "INV-0037",
+        "LED-000073",
+        "LED-000074"
+      ],
+      "expected_amount_minor": 1080000,
+      "currency": "KZT",
+      "allowed_evidence_sets": [
+        [
+          "INV-0037",
+          "LED-000073",
+          "LED-000074"
+        ],
+        [
+          "INV-0037",
+          "LED-000073"
+        ]
+      ],
+      "explanation": "The invoice belongs to the reporting period but its posting sits outside the period boundary.",
+      "issue_id": "ISS-0003"
+    },
+    {
+      "type": "period_cutoff",
+      "affected_ids": [
+        "PAY-0040",
+        "LED-000277",
+        "LED-000278"
+      ],
+      "expected_amount_minor": 1026000,
+      "currency": "KZT",
+      "allowed_evidence_sets": [
+        [
+          "PAY-0040",
+          "LED-000277",
+          "LED-000278"
+        ],
+        [
+          "PAY-0040",
+          "LED-000277"
+        ]
+      ],
+      "explanation": "The payment belongs to the reporting period but its posting sits outside the period boundary.",
+      "issue_id": "ISS-0004"
+    },
+    {
+      "type": "period_cutoff",
+      "affected_ids": [
+        "PAY-0041",
+        "LED-000280",
+        "LED-000281"
+      ],
+      "expected_amount_minor": 10344000,
+      "currency": "KZT",
+      "allowed_evidence_sets": [
+        [
+          "PAY-0041",
+          "LED-000280",
+          "LED-000281"
+        ],
+        [
+          "PAY-0041",
+          "LED-000280"
+        ]
+      ],
+      "explanation": "The payment belongs to the reporting period but its posting sits outside the period boundary.",
+      "issue_id": "ISS-0005"
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "episode_id": "ep-ce5081cc78",
+  "seed_fingerprint": "2009:0",
+  "steps": [
+    {
+      "kind": "composite",
+      "scope": "boundary_fx_payment",
+      "invoice_id": "INV-0006",
+      "payment_id": "PAY-0039",
+      "rows": [
+        "LED-000273",
+        "LED-000274",
+        "LED-000275"
+      ],
+      "wrong_rate_day": "2025-09-27",
+      "posted_at": "2025-10-01T23:59:59+05:00"
+    },
+    {
+      "kind": "composite",
+      "scope": "gap_cutoff_payment",
+      "invoice_id": "INV-0038",
+      "payment_id": "PAY-0040",
+      "rows": [
+        "LED-000276",
+        "LED-000277",
+        "LED-000278"
+      ],
+      "gap_minor": 61560,
+      "posted_at": "2025-10-01T23:59:59+05:00"
+    }
+  ]
+}

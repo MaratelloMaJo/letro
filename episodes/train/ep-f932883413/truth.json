@@ -1,0 +1,105 @@
+{
+  "episode_id": "ep-f932883413",
+  "issues": [
+    {
+      "type": "fx_rate_error",
+      "affected_ids": [
+        "PAY-0038",
+        "LED-000273",
+        "LED-000275",
+        "LED-000274"
+      ],
+      "expected_amount_minor": 55484,
+      "currency": "KZT",
+      "allowed_evidence_sets": [
+        [
+          "PAY-0038",
+          "LED-000273",
+          "LED-000275",
+          "LED-000274"
+        ],
+        [
+          "PAY-0038",
+          "LED-000273"
+        ]
+      ],
+      "explanation": "The cash receipt was converted at a rate that does not match the policy date for the payment.",
+      "issue_id": "ISS-0001"
+    },
+    {
+      "type": "payment_allocation_gap",
+      "affected_ids": [
+        "PAY-0039",
+        "INV-0001",
+        "LED-000276",
+        "LED-000277",
+        "LED-000278"
+      ],
+      "expected_amount_minor": 1392000,
+      "currency": "KZT",
+      "allowed_evidence_sets": [
+        [
+          "PAY-0039",
+          "INV-0001",
+          "LED-000276",
+          "LED-000277"
+        ],
+        [
+          "PAY-0039",
+          "INV-0001",
+          "LED-000276",
+          "LED-000277",
+          "LED-000278"
+        ]
+      ],
+      "explanation": "The payment covers the invoice but part of the receipt was not allocated; receivables stay overstated.",
+      "issue_id": "ISS-0002"
+    },
+    {
+      "type": "period_cutoff",
+      "affected_ids": [
+        "PAY-0038",
+        "LED-000273",
+        "LED-000274"
+      ],
+      "expected_amount_minor": 24178755,
+      "currency": "KZT",
+      "allowed_evidence_sets": [
+        [
+          "PAY-0038",
+          "LED-000273",
+          "LED-000274"
+        ],
+        [
+          "PAY-0038",
+          "LED-000273"
+        ]
+      ],
+      "explanation": "The payment belongs to the reporting period but its posting sits outside the period boundary.",
+      "issue_id": "ISS-0003"
+    },
+    {
+      "type": "period_cutoff",
+      "affected_ids": [
+        "PAY-0039",
+        "LED-000276",
+        "LED-000277"
+      ],
+      "expected_amount_minor": 3480000,
+      "currency": "KZT",
+      "allowed_evidence_sets": [
+        [
+          "PAY-0039",
+          "LED-000276",
+          "LED-000277"
+        ],
+        [
+          "PAY-0039",
+          "LED-000276"
+        ]
+      ],
+      "explanation": "The payment belongs to the reporting period but its posting sits outside the period boundary.",
+      "issue_id": "ISS-0004"
+    }
+  ]
+}

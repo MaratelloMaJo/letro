@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "letro"
+version = "1.0.0"
+description = "Ledger Evidence & Traceable Reward Oracle: a reproducible financial-audit RL environment"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "LETRO contributors" }]
+keywords = ["reinforcement-learning", "audit", "synthetic-data", "evaluation"]
+classifiers = [
+  "Programming Language :: Python :: 3.11",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+]
+dependencies = []
+
+[project.scripts]
+letro-verify = "letro.verify:main"
+
+[tool.setuptools.packages.find]
+include = ["letro*"]

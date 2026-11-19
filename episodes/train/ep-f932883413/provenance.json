@@ -1,0 +1,32 @@
+{
+  "episode_id": "ep-f932883413",
+  "seed_fingerprint": "1005:0",
+  "steps": [
+    {
+      "kind": "composite",
+      "scope": "boundary_fx_payment",
+      "invoice_id": "INV-0026",
+      "payment_id": "PAY-0038",
+      "rows": [
+        "LED-000273",
+        "LED-000274",
+        "LED-000275"
+      ],
+      "wrong_rate_day": "2026-03-29",
+      "posted_at": "2026-03-31T23:59:59+05:00"
+    },
+    {
+      "kind": "composite",
+      "scope": "gap_cutoff_payment",
+      "invoice_id": "INV-0001",
+      "payment_id": "PAY-0039",
+      "rows": [
+        "LED-000276",
+        "LED-000277",
+        "LED-000278"
+      ],
+      "gap_minor": 1392000,
+      "posted_at": "2026-03-31T23:59:59+05:00"
+    }
+  ]
+}

@@ -1,0 +1,132 @@
+{
+  "episode_id": "ep-b76abaed0c",
+  "issues": [
+    {
+      "type": "duplicate_invoice",
+      "affected_ids": [
+        "INV-0021",
+        "LED-000273",
+        "LED-000274"
+      ],
+      "expected_amount_minor": 38010000,
+      "currency": "KZT",
+      "allowed_evidence_sets": [
+        [
+          "INV-0021",
+          "LED-000273",
+          "LED-000274"
+        ],
+        [
+          "INV-0021",
+          "LED-000273"
+        ]
+      ],
+      "explanation": "The invoice is posted more than once; the extra posting inflates receivables and revenue.",
+      "issue_id": "ISS-0001"
+    },
+    {
+      "type": "payment_allocation_gap",
+      "affected_ids": [
+        "PAY-0040",
+        "INV-0032",
+        "LED-000278",
+        "LED-000279",
+        "LED-000280"
+      ],
+      "expected_amount_minor": 13375200,
+      "currency": "KZT",
+      "allowed_evidence_sets": [
+        [
+          "PAY-0040",
+          "INV-0032",
+          "LED-000278",
+          "LED-000279"
+        ],
+        [
+          "PAY-0040",
+          "INV-0032",
+          "LED-000278",
+          "LED-000279",
+          "LED-000280"
+        ]
+      ],
+      "explanation": "The payment covers the invoice but part of the receipt was not allocated; receivables stay overstated.",
+      "issue_id": "ISS-0002"
+    },
+    {
+      "type": "payment_allocation_gap",
+      "affected_ids": [
+        "PAY-0041",
+        "INV-0023",
+        "LED-000281",
+        "LED-000282",
+        "LED-000283"
+      ],
+      "expected_amount_minor": 1814400,
+      "currency": "KZT",
+      "allowed_evidence_sets": [
+        [
+          "PAY-0041",
+          "INV-0023",
+          "LED-000281",
+          "LED-000282"
+        ],
+        [
+          "PAY-0041",
+          "INV-0023",
+          "LED-000281",
+          "LED-000282",
+          "LED-000283"
+        ]
+      ],
+      "explanation": "The payment covers the invoice but part of the receipt was not allocated; receivables stay overstated.",
+      "issue_id": "ISS-0003"
+    },
+    {
+      "type": "period_cutoff",
+      "affected_ids": [
+        "PAY-0040",
+        "LED-000278",
+        "LED-000279"
+      ],
+      "expected_amount_minor": 33438000,
+      "currency": "KZT",
+      "allowed_evidence_sets": [
+        [
+          "PAY-0040",
+          "LED-000278",
+          "LED-000279"
+        ],
+        [
+          "PAY-0040",
+          "LED-000278"
+        ]
+      ],
+      "explanation": "The payment belongs to the reporting period but its posting sits outside the period boundary.",
+      "issue_id": "ISS-0004"
+    },
+    {
+      "type": "period_cutoff",
+      "affected_ids": [
+        "PAY-0041",
+        "LED-000281",
+        "LED-000282"
+      ],
+      "expected_amount_minor": 4536000,
+      "currency": "KZT",
+      "allowed_evidence_sets": [
+        [
+          "PAY-0041",
+          "LED-000281",
+          "LED-000282"
+        ],
+        [
+          "PAY-0041",
+          "LED-000281"
+        ]
+      ],
+      "explanation": "The payment belongs to the reporting period but its posting sits outside the period boundary.",
+      "issue_id": "ISS-0005"
+    }
+  ]
+}

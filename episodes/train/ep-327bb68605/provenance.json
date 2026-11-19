@@ -1,0 +1,26 @@
+{
+  "episode_id": "ep-327bb68605",
+  "seed_fingerprint": "1006:0",
+  "steps": [
+    {
+      "kind": "duplicate_invoice",
+      "invoice_id": "INV-0015",
+      "rows": [
+        "LED-000274",
+        "LED-000275"
+      ]
+    },
+    {
+      "kind": "fx_rate_error",
+      "scope": "invoice",
+      "invoice_id": "INV-0027",
+      "rows": [
+        "LED-000053",
+        "LED-000054"
+      ],
+      "correct_minor": 177167184,
+      "wrong_minor": 177522228,
+      "wrong_rate_day": "2026-03-31"
+    }
+  ]
+}

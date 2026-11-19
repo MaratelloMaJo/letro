@@ -1,0 +1,97 @@
+{
+  "episode_id": "ep-e7d18b6414",
+  "issues": [
+    {
+      "type": "fx_rate_error",
+      "affected_ids": [
+        "INV-0004",
+        "LED-000007",
+        "LED-000008"
+      ],
+      "expected_amount_minor": 307348,
+      "currency": "KZT",
+      "allowed_evidence_sets": [
+        [
+          "INV-0004",
+          "LED-000007",
+          "LED-000008"
+        ],
+        [
+          "INV-0004",
+          "LED-000007"
+        ]
+      ],
+      "explanation": "The posted base amount does not match the policy FX rate for the invoice date.",
+      "issue_id": "ISS-0001"
+    },
+    {
+      "type": "fx_rate_error",
+      "affected_ids": [
+        "INV-0020",
+        "LED-000039",
+        "LED-000040"
+      ],
+      "expected_amount_minor": 3932,
+      "currency": "KZT",
+      "allowed_evidence_sets": [
+        [
+          "INV-0020",
+          "LED-000039",
+          "LED-000040"
+        ],
+        [
+          "INV-0020",
+          "LED-000039"
+        ]
+      ],
+      "explanation": "The posted base amount does not match the policy FX rate for the invoice date.",
+      "issue_id": "ISS-0002"
+    },
+    {
+      "type": "period_cutoff",
+      "affected_ids": [
+        "INV-0001",
+        "LED-000001",
+        "LED-000002"
+      ],
+      "expected_amount_minor": 14240000,
+      "currency": "KZT",
+      "allowed_evidence_sets": [
+        [
+          "INV-0001",
+          "LED-000001",
+          "LED-000002"
+        ],
+        [
+          "INV-0001",
+          "LED-000001"
+        ]
+      ],
+      "explanation": "The invoice belongs to the reporting period but its posting sits outside the period boundary.",
+      "issue_id": "ISS-0003"
+    },
+    {
+      "type": "period_cutoff",
+      "affected_ids": [
+        "INV-0030",
+        "LED-000059",
+        "LED-000060"
+      ],
+      "expected_amount_minor": 28560000,
+      "currency": "KZT",
+      "allowed_evidence_sets": [
+        [
+          "INV-0030",
+          "LED-000059",
+          "LED-000060"
+        ],
+        [
+          "INV-0030",
+          "LED-000059"
+        ]
+      ],
+      "explanation": "The invoice belongs to the reporting period but its posting sits outside the period boundary.",
+      "issue_id": "ISS-0004"
+    }
+  ]
+}

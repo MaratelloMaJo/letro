@@ -1,0 +1,29 @@
+{
+  "episode_id": "ep-79574057d6",
+  "seed_fingerprint": "1003:0",
+  "steps": [
+    {
+      "kind": "duplicate_invoice",
+      "invoice_id": "INV-0010",
+      "rows": [
+        "LED-000274",
+        "LED-000275"
+      ]
+    },
+    {
+      "kind": "duplicate_invoice",
+      "invoice_id": "INV-0007",
+      "rows": [
+        "LED-000276",
+        "LED-000277"
+      ]
+    },
+    {
+      "kind": "payment_allocation_gap",
+      "payment_id": "PAY-0010",
+      "invoice_id": "INV-0030",
+      "gap_minor": 3504000,
+      "suspense_row": "LED-000278"
+    }
+  ]
+}

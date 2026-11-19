@@ -1,0 +1,7 @@
+# LETRO has no third-party runtime dependencies.
+# The generator, environment, matcher, reward, verifier and tests use only the
+# Python 3.11+ standard library and run fully offline.
+#
+# Python: >=3.11
+# GPU: not required
+# Network: not required

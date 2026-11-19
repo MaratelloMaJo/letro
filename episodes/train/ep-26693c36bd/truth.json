@@ -1,0 +1,103 @@
+{
+  "episode_id": "ep-26693c36bd",
+  "issues": [
+    {
+      "type": "duplicate_invoice",
+      "affected_ids": [
+        "INV-0037",
+        "LED-000273",
+        "LED-000274"
+      ],
+      "expected_amount_minor": 46954,
+      "currency": "EUR",
+      "allowed_evidence_sets": [
+        [
+          "INV-0037",
+          "LED-000273",
+          "LED-000274"
+        ],
+        [
+          "INV-0037",
+          "LED-000273"
+        ]
+      ],
+      "explanation": "The invoice is posted more than once; the extra posting inflates receivables and revenue.",
+      "issue_id": "ISS-0001"
+    },
+    {
+      "type": "fx_rate_error",
+      "affected_ids": [
+        "INV-0031",
+        "LED-000061",
+        "LED-000062"
+      ],
+      "expected_amount_minor": 19,
+      "currency": "EUR",
+      "allowed_evidence_sets": [
+        [
+          "INV-0031",
+          "LED-000061",
+          "LED-000062"
+        ],
+        [
+          "INV-0031",
+          "LED-000061"
+        ]
+      ],
+      "explanation": "The posted base amount does not match the policy FX rate for the invoice date.",
+      "issue_id": "ISS-0002"
+    },
+    {
+      "type": "payment_allocation_gap",
+      "affected_ids": [
+        "PAY-0011",
+        "INV-0016",
+        "LED-000105",
+        "LED-000106",
+        "LED-000275"
+      ],
+      "expected_amount_minor": 90266,
+      "currency": "EUR",
+      "allowed_evidence_sets": [
+        [
+          "PAY-0011",
+          "INV-0016",
+          "LED-000105",
+          "LED-000106"
+        ],
+        [
+          "PAY-0011",
+          "INV-0016",
+          "LED-000105",
+          "LED-000106",
+          "LED-000275"
+        ]
+      ],
+      "explanation": "The payment covers the invoice but part of the receipt was not allocated; receivables stay overstated.",
+      "issue_id": "ISS-0003"
+    },
+    {
+      "type": "period_cutoff",
+      "affected_ids": [
+        "INV-0010",
+        "LED-000019",
+        "LED-000020"
+      ],
+      "expected_amount_minor": 246354,
+      "currency": "EUR",
+      "allowed_evidence_sets": [
+        [
+          "INV-0010",
+          "LED-000019",
+          "LED-000020"
+        ],
+        [
+          "INV-0010",
+          "LED-000019"
+        ]
+      ],
+      "explanation": "The invoice belongs to the reporting period but its posting sits outside the period boundary.",
+      "issue_id": "ISS-0004"
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "episode_id": "ep-b76abaed0c",
+  "seed_fingerprint": "2007:0",
+  "steps": [
+    {
+      "kind": "duplicate_invoice",
+      "invoice_id": "INV-0021",
+      "rows": [
+        "LED-000273",
+        "LED-000274"
+      ]
+    },
+    {
+      "kind": "composite",
+      "scope": "gap_cutoff_payment",
+      "invoice_id": "INV-0032",
+      "payment_id": "PAY-0040",
+      "rows": [
+        "LED-000278",
+        "LED-000279",
+        "LED-000280"
+      ],
+      "gap_minor": 13375200,
+      "posted_at": "2026-05-01T23:59:59+05:00"
+    },
+    {
+      "kind": "composite",
+      "scope": "gap_cutoff_payment",
+      "invoice_id": "INV-0023",
+      "payment_id": "PAY-0041",
+      "rows": [
+        "LED-000281",
+        "LED-000282",
+        "LED-000283"
+      ],
+      "gap_minor": 1814400,
+      "posted_at": "2026-05-01T23:59:59+05:00"
+    }
+  ]
+}

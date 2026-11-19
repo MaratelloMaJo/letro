@@ -1,0 +1,151 @@
+{
+  "episode_id": "ep-0355f382cb",
+  "issues": [
+    {
+      "type": "duplicate_invoice",
+      "affected_ids": [
+        "INV-0025",
+        "LED-000273",
+        "LED-000274"
+      ],
+      "expected_amount_minor": 1670000,
+      "currency": "KZT",
+      "allowed_evidence_sets": [
+        [
+          "INV-0025",
+          "LED-000273",
+          "LED-000274"
+        ],
+        [
+          "INV-0025",
+          "LED-000273"
+        ]
+      ],
+      "explanation": "The invoice is posted more than once; the extra posting inflates receivables and revenue.",
+      "issue_id": "ISS-0001"
+    },
+    {
+      "type": "fx_rate_error",
+      "affected_ids": [
+        "INV-0032",
+        "LED-000063",
+        "LED-000064"
+      ],
+      "expected_amount_minor": 1167,
+      "currency": "KZT",
+      "allowed_evidence_sets": [
+        [
+          "INV-0032",
+          "LED-000063",
+          "LED-000064"
+        ],
+        [
+          "INV-0032",
+          "LED-000063"
+        ]
+      ],
+      "explanation": "The posted base amount does not match the policy FX rate for the invoice date.",
+      "issue_id": "ISS-0002"
+    },
+    {
+      "type": "fx_rate_error",
+      "affected_ids": [
+        "PAY-0039",
+        "LED-000276",
+        "LED-000278",
+        "LED-000277"
+      ],
+      "expected_amount_minor": 17350,
+      "currency": "KZT",
+      "allowed_evidence_sets": [
+        [
+          "PAY-0039",
+          "LED-000276",
+          "LED-000278",
+          "LED-000277"
+        ],
+        [
+          "PAY-0039",
+          "LED-000276"
+        ]
+      ],
+      "explanation": "The cash receipt was converted at a rate that does not match the policy date for the payment.",
+      "issue_id": "ISS-0003"
+    },
+    {
+      "type": "payment_allocation_gap",
+      "affected_ids": [
+        "PAY-0024",
+        "INV-0039",
+        "LED-000131",
+        "LED-000132",
+        "LED-000275"
+      ],
+      "expected_amount_minor": 19264000,
+      "currency": "KZT",
+      "allowed_evidence_sets": [
+        [
+          "PAY-0024",
+          "INV-0039",
+          "LED-000131",
+          "LED-000132"
+        ],
+        [
+          "PAY-0024",
+          "INV-0039",
+          "LED-000131",
+          "LED-000132",
+          "LED-000275"
+        ]
+      ],
+      "explanation": "The payment covers the invoice but part of the receipt was not allocated; receivables stay overstated.",
+      "issue_id": "ISS-0004"
+    },
+    {
+      "type": "period_cutoff",
+      "affected_ids": [
+        "INV-0037",
+        "LED-000073",
+        "LED-000074"
+      ],
+      "expected_amount_minor": 42300000,
+      "currency": "KZT",
+      "allowed_evidence_sets": [
+        [
+          "INV-0037",
+          "LED-000073",
+          "LED-000074"
+        ],
+        [
+          "INV-0037",
+          "LED-000073"
+        ]
+      ],
+      "explanation": "The invoice belongs to the reporting period but its posting sits outside the period boundary.",
+      "issue_id": "ISS-0005"
+    },
+    {
+      "type": "period_cutoff",
+      "affected_ids": [
+        "PAY-0039",
+        "LED-000276",
+        "LED-000277"
+      ],
+      "expected_amount_minor": 43390439,
+      "currency": "KZT",
+      "allowed_evidence_sets": [
+        [
+          "PAY-0039",
+          "LED-000276",
+          "LED-000277"
+        ],
+        [
+          "PAY-0039",
+          "LED-000276"
+        ]
+      ],
+      "explanation": "The payment belongs to the reporting period but its posting sits outside the period boundary.",
+      "issue_id": "ISS-0006"
+    }
+  ]
+}

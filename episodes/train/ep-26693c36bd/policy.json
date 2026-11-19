@@ -1,0 +1,14 @@
+{
+  "fx_rate_date": "invoice_date",
+  "period_start_inclusive": true,
+  "period_end_inclusive": true,
+  "rounding": "half_up",
+  "amount_tolerance_minor": 1,
+  "period_start": "2025-11-01T09:00:00+05:00",
+  "period_end": "2025-11-30T23:59:59+05:00",
+  "timezone": "Asia/Almaty",
+  "base_currency": "EUR",
+  "fx_rate_date_invoice": "invoice_date",
+  "fx_rate_date_payment": "payment_date",
+  "evidence_rule": "at_least_one_complete_allowed_set"
+}

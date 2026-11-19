@@ -1,0 +1,56 @@
+{
+  "episode_id": "ep-0355f382cb",
+  "seed_fingerprint": "1001:0",
+  "steps": [
+    {
+      "kind": "duplicate_invoice",
+      "invoice_id": "INV-0025",
+      "rows": [
+        "LED-000273",
+        "LED-000274"
+      ]
+    },
+    {
+      "kind": "payment_allocation_gap",
+      "payment_id": "PAY-0024",
+      "invoice_id": "INV-0039",
+      "gap_minor": 19264000,
+      "suspense_row": "LED-000275"
+    },
+    {
+      "kind": "fx_rate_error",
+      "scope": "invoice",
+      "invoice_id": "INV-0032",
+      "rows": [
+        "LED-000063",
+        "LED-000064"
+      ],
+      "correct_minor": 11674518,
+      "wrong_minor": 11675685,
+      "wrong_rate_day": "2025-09-18"
+    },
+    {
+      "kind": "period_cutoff",
+      "scope": "invoice",
+      "invoice_id": "INV-0037",
+      "rows": [
+        "LED-000073",
+        "LED-000074"
+      ],
+      "posted_at": "2025-10-02T23:59:59+05:00"
+    },
+    {
+      "kind": "composite",
+      "scope": "boundary_fx_payment",
+      "invoice_id": "INV-0024",
+      "payment_id": "PAY-0039",
+      "rows": [
+        "LED-000276",
+        "LED-000277",
+        "LED-000278"
+      ],
+      "wrong_rate_day": "2025-09-29",
+      "posted_at": "2025-10-01T23:59:59+05:00"
+    }
+  ]
+}

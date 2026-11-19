@@ -1,0 +1,51 @@
+{
+  "episode_id": "ep-327bb68605",
+  "issues": [
+    {
+      "type": "duplicate_invoice",
+      "affected_ids": [
+        "INV-0015",
+        "LED-000274",
+        "LED-000275"
+      ],
+      "expected_amount_minor": 25930000,
+      "currency": "KZT",
+      "allowed_evidence_sets": [
+        [
+          "INV-0015",
+          "LED-000274",
+          "LED-000275"
+        ],
+        [
+          "INV-0015",
+          "LED-000274"
+        ]
+      ],
+      "explanation": "The invoice is posted more than once; the extra posting inflates receivables and revenue.",
+      "issue_id": "ISS-0001"
+    },
+    {
+      "type": "fx_rate_error",
+      "affected_ids": [
+        "INV-0027",
+        "LED-000053",
+        "LED-000054"
+      ],
+      "expected_amount_minor": 355044,
+      "currency": "KZT",
+      "allowed_evidence_sets": [
+        [
+          "INV-0027",
+          "LED-000053",
+          "LED-000054"
+        ],
+        [
+          "INV-0027",
+          "LED-000053"
+        ]
+      ],
+      "explanation": "The posted base amount does not match the policy FX rate for the invoice date.",
+      "issue_id": "ISS-0002"
+    }
+  ]
+}

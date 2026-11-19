@@ -1,0 +1,23 @@
+{
+  "episode_id": "ep-478ece80ec",
+  "seed_fingerprint": "1007:0",
+  "steps": [
+    {
+      "kind": "payment_allocation_gap",
+      "payment_id": "PAY-0007",
+      "invoice_id": "INV-0024",
+      "gap_minor": 2760000,
+      "suspense_row": "LED-000273"
+    },
+    {
+      "kind": "period_cutoff",
+      "scope": "invoice",
+      "invoice_id": "INV-0013",
+      "rows": [
+        "LED-000025",
+        "LED-000026"
+      ],
+      "posted_at": "2026-06-01T23:59:59+05:00"
+    }
+  ]
+}

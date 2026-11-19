@@ -1,0 +1,737 @@
+{
+  "schema_version": "1.0.0",
+  "generator": "scripts/build_episodes.py",
+  "note": "Open train/dev episodes with labelled truth.json. Hidden grading uses unseen seeds and the same generator version.",
+  "train": [
+    {
+      "split": "train",
+      "directory": "episodes/train/ep-0355f382cb",
+      "episode_id": "ep-0355f382cb",
+      "seed": 1001,
+      "config": {
+        "schema_version": "1.0.0",
+        "base_currency": "KZT",
+        "period_days": 30,
+        "timezone_offset": "+05:00",
+        "sizes": {
+          "invoices": 40,
+          "payments": 36,
+          "issues": 6,
+          "ledger_rows": 320
+        },
+        "errors": {
+          "duplicate_invoice": 1,
+          "payment_allocation_gap": 1,
+          "fx_rate_error": 1,
+          "period_cutoff": 1,
+          "composite": 1
+        },
+        "clean": false,
+        "mode": "train",
+        "variant": 0
+      },
+      "issues": [
+        "duplicate_invoice",
+        "fx_rate_error",
+        "fx_rate_error",
+        "payment_allocation_gap",
+        "period_cutoff",
+        "period_cutoff"
+      ],
+      "clean": false,
+      "ledger_rows": 278,
+      "documents": 79,
+      "open_files_sha256": "1a326d27da70134ab6c7b6bfec9769845f9b717fd3c70705cecdab685cf98882"
+    },
+    {
+      "split": "train",
+      "directory": "episodes/train/ep-5422150237",
+      "episode_id": "ep-5422150237",
+      "seed": 1002,
+      "config": {
+        "schema_version": "1.0.0",
+        "base_currency": "KZT",
+        "period_days": 30,
+        "timezone_offset": "+05:00",
+        "sizes": {
+          "invoices": 40,
+          "payments": 36,
+          "issues": 6,
+          "ledger_rows": 320
+        },
+        "errors": {
+          "duplicate_invoice": 0,
+          "payment_allocation_gap": 0,
+          "fx_rate_error": 0,
+          "period_cutoff": 0,
+          "composite": 0
+        },
+        "clean": true,
+        "mode": "train",
+        "variant": 0
+      },
+      "issues": [],
+      "clean": true,
+      "ledger_rows": 273,
+      "documents": 77,
+      "open_files_sha256": "8ef4de3a096fba6ce6709c2b8eac88b5d6813c79d2b8b20b46240a3d226748b7"
+    },
+    {
+      "split": "train",
+      "directory": "episodes/train/ep-79574057d6",
+      "episode_id": "ep-79574057d6",
+      "seed": 1003,
+      "config": {
+        "schema_version": "1.0.0",
+        "base_currency": "KZT",
+        "period_days": 30,
+        "timezone_offset": "+05:00",
+        "sizes": {
+          "invoices": 40,
+          "payments": 36,
+          "issues": 3,
+          "ledger_rows": 320
+        },
+        "errors": {
+          "duplicate_invoice": 2,
+          "payment_allocation_gap": 1,
+          "fx_rate_error": 0,
+          "period_cutoff": 0,
+          "composite": 0
+        },
+        "clean": false,
+        "mode": "train",
+        "variant": 0
+      },
+      "issues": [
+        "duplicate_invoice",
+        "duplicate_invoice",
+        "payment_allocation_gap"
+      ],
+      "clean": false,
+      "ledger_rows": 278,
+      "documents": 78,
+      "open_files_sha256": "98475af40d245bda20c689ab22829f1aac609ef934c0000d03f7aaa3f17bae05"
+    },
+    {
+      "split": "train",
+      "directory": "episodes/train/ep-e7d18b6414",
+      "episode_id": "ep-e7d18b6414",
+      "seed": 1004,
+      "config": {
+        "schema_version": "1.0.0",
+        "base_currency": "KZT",
+        "period_days": 30,
+        "timezone_offset": "+05:00",
+        "sizes": {
+          "invoices": 40,
+          "payments": 36,
+          "issues": 4,
+          "ledger_rows": 320
+        },
+        "errors": {
+          "duplicate_invoice": 0,
+          "payment_allocation_gap": 0,
+          "fx_rate_error": 2,
+          "period_cutoff": 2,
+          "composite": 0
+        },
+        "clean": false,
+        "mode": "train",
+        "variant": 0
+      },
+      "issues": [
+        "fx_rate_error",
+        "fx_rate_error",
+        "period_cutoff",
+        "period_cutoff"
+      ],
+      "clean": false,
+      "ledger_rows": 273,
+      "documents": 78,
+      "open_files_sha256": "420c6c3a4e21051fb7da4e3336cd31e31ecef842777bf915561aa02483a9df38"
+    },
+    {
+      "split": "train",
+      "directory": "episodes/train/ep-f932883413",
+      "episode_id": "ep-f932883413",
+      "seed": 1005,
+      "config": {
+        "schema_version": "1.0.0",
+        "base_currency": "KZT",
+        "period_days": 30,
+        "timezone_offset": "+05:00",
+        "sizes": {
+          "invoices": 40,
+          "payments": 36,
+          "issues": 4,
+          "ledger_rows": 320
+        },
+        "errors": {
+          "duplicate_invoice": 0,
+          "payment_allocation_gap": 0,
+          "fx_rate_error": 0,
+          "period_cutoff": 0,
+          "composite": 2
+        },
+        "clean": false,
+        "mode": "train",
+        "variant": 0
+      },
+      "issues": [
+        "fx_rate_error",
+        "payment_allocation_gap",
+        "period_cutoff",
+        "period_cutoff"
+      ],
+      "clean": false,
+      "ledger_rows": 278,
+      "documents": 79,
+      "open_files_sha256": "7c837e8dfc729e82a54d374ffd01275df8aea101b1ee93f4eae6419e4f285db4"
+    },
+    {
+      "split": "train",
+      "directory": "episodes/train/ep-327bb68605",
+      "episode_id": "ep-327bb68605",
+      "seed": 1006,
+      "config": {
+        "schema_version": "1.0.0",
+        "base_currency": "KZT",
+        "period_days": 30,
+        "timezone_offset": "+05:00",
+        "sizes": {
+          "invoices": 40,
+          "payments": 36,
+          "issues": 2,
+          "ledger_rows": 320
+        },
+        "errors": {
+          "duplicate_invoice": 1,
+          "payment_allocation_gap": 0,
+          "fx_rate_error": 1,
+          "period_cutoff": 0,
+          "composite": 0
+        },
+        "clean": false,
+        "mode": "train",
+        "variant": 0
+      },
+      "issues": [
+        "duplicate_invoice",
+        "fx_rate_error"
+      ],
+      "clean": false,
+      "ledger_rows": 275,
+      "documents": 78,
+      "open_files_sha256": "82f781ebbe600e9427196d5bb4383e77aa5dd725575cca5f719bc2e9c027f2c5"
+    },
+    {
+      "split": "train",
+      "directory": "episodes/train/ep-478ece80ec",
+      "episode_id": "ep-478ece80ec",
+      "seed": 1007,
+      "config": {
+        "schema_version": "1.0.0",
+        "base_currency": "KZT",
+        "period_days": 30,
+        "timezone_offset": "+05:00",
+        "sizes": {
+          "invoices": 40,
+          "payments": 36,
+          "issues": 2,
+          "ledger_rows": 320
+        },
+        "errors": {
+          "duplicate_invoice": 0,
+          "payment_allocation_gap": 1,
+          "fx_rate_error": 0,
+          "period_cutoff": 1,
+          "composite": 0
+        },
+        "clean": false,
+        "mode": "train",
+        "variant": 0
+      },
+      "issues": [
+        "payment_allocation_gap",
+        "period_cutoff"
+      ],
+      "clean": false,
+      "ledger_rows": 273,
+      "documents": 77,
+      "open_files_sha256": "449abad0139ae9bc8863f2766919534daa312f9a5b82ecd5750e3eb223aa069a"
+    },
+    {
+      "split": "train",
+      "directory": "episodes/train/ep-6c6742f837",
+      "episode_id": "ep-6c6742f837",
+      "seed": 1008,
+      "config": {
+        "schema_version": "1.0.0",
+        "base_currency": "USD",
+        "period_days": 30,
+        "timezone_offset": "+05:00",
+        "sizes": {
+          "invoices": 55,
+          "payments": 44,
+          "issues": 6,
+          "ledger_rows": 480
+        },
+        "errors": {
+          "duplicate_invoice": 0,
+          "payment_allocation_gap": 0,
+          "fx_rate_error": 0,
+          "period_cutoff": 0,
+          "composite": 0
+        },
+        "clean": true,
+        "mode": "train",
+        "variant": 0
+      },
+      "issues": [],
+      "clean": true,
+      "ledger_rows": 409,
+      "documents": 100,
+      "open_files_sha256": "6c4941595d3b3af27c7d8c34c25fa46a46fe3684dcf0cbb7bb60452dfe69e3bb"
+    },
+    {
+      "split": "train",
+      "directory": "episodes/train/ep-d9f7fac2d6",
+      "episode_id": "ep-d9f7fac2d6",
+      "seed": 1009,
+      "config": {
+        "schema_version": "1.0.0",
+        "base_currency": "KZT",
+        "period_days": 30,
+        "timezone_offset": "+05:00",
+        "sizes": {
+          "invoices": 40,
+          "payments": 36,
+          "issues": 6,
+          "ledger_rows": 320
+        },
+        "errors": {
+          "duplicate_invoice": 1,
+          "payment_allocation_gap": 1,
+          "fx_rate_error": 1,
+          "period_cutoff": 1,
+          "composite": 1
+        },
+        "clean": false,
+        "mode": "train",
+        "variant": 0
+      },
+      "issues": [
+        "duplicate_invoice",
+        "fx_rate_error",
+        "fx_rate_error",
+        "payment_allocation_gap",
+        "period_cutoff",
+        "period_cutoff"
+      ],
+      "clean": false,
+      "ledger_rows": 279,
+      "documents": 78,
+      "open_files_sha256": "c41cf4824bf4034066df851688782e984457fdef6cc49b26ba3a49416d7c7a6a"
+    },
+    {
+      "split": "train",
+      "directory": "episodes/train/ep-26693c36bd",
+      "episode_id": "ep-26693c36bd",
+      "seed": 1010,
+      "config": {
+        "schema_version": "1.0.0",
+        "base_currency": "EUR",
+        "period_days": 30,
+        "timezone_offset": "+05:00",
+        "sizes": {
+          "invoices": 40,
+          "payments": 36,
+          "issues": 4,
+          "ledger_rows": 320
+        },
+        "errors": {
+          "duplicate_invoice": 1,
+          "payment_allocation_gap": 1,
+          "fx_rate_error": 1,
+          "period_cutoff": 1,
+          "composite": 0
+        },
+        "clean": false,
+        "mode": "train",
+        "variant": 0
+      },
+      "issues": [
+        "duplicate_invoice",
+        "fx_rate_error",
+        "payment_allocation_gap",
+        "period_cutoff"
+      ],
+      "clean": false,
+      "ledger_rows": 275,
+      "documents": 78,
+      "open_files_sha256": "2be416f25ee4f3923fd1266848511a4680aeccf1b64eb1030ca76688b93498a5"
+    }
+  ],
+  "dev": [
+    {
+      "split": "dev",
+      "directory": "episodes/dev/ep-b545af7e17",
+      "episode_id": "ep-b545af7e17",
+      "seed": 2001,
+      "config": {
+        "schema_version": "1.0.0",
+        "base_currency": "KZT",
+        "period_days": 30,
+        "timezone_offset": "+05:00",
+        "sizes": {
+          "invoices": 40,
+          "payments": 36,
+          "issues": 6,
+          "ledger_rows": 320
+        },
+        "errors": {
+          "duplicate_invoice": 0,
+          "payment_allocation_gap": 0,
+          "fx_rate_error": 0,
+          "period_cutoff": 0,
+          "composite": 0
+        },
+        "clean": true,
+        "mode": "train",
+        "variant": 0
+      },
+      "issues": [],
+      "clean": true,
+      "ledger_rows": 273,
+      "documents": 76,
+      "open_files_sha256": "98499986fb90fe68a89ba4c778f30b3e658c529728ede0e6431f90676d93de82"
+    },
+    {
+      "split": "dev",
+      "directory": "episodes/dev/ep-cb9711f7cb",
+      "episode_id": "ep-cb9711f7cb",
+      "seed": 2002,
+      "config": {
+        "schema_version": "1.0.0",
+        "base_currency": "KZT",
+        "period_days": 30,
+        "timezone_offset": "+05:00",
+        "sizes": {
+          "invoices": 60,
+          "payments": 50,
+          "issues": 6,
+          "ledger_rows": 520
+        },
+        "errors": {
+          "duplicate_invoice": 0,
+          "payment_allocation_gap": 0,
+          "fx_rate_error": 0,
+          "period_cutoff": 0,
+          "composite": 0
+        },
+        "clean": true,
+        "mode": "train",
+        "variant": 0
+      },
+      "issues": [],
+      "clean": true,
+      "ledger_rows": 442,
+      "documents": 112,
+      "open_files_sha256": "f2064f0a1026f6bef57e78dd4b4abff57078bd3aed230136349720b0c2e7c6c9"
+    },
+    {
+      "split": "dev",
+      "directory": "episodes/dev/ep-52cc0ddebd",
+      "episode_id": "ep-52cc0ddebd",
+      "seed": 2003,
+      "config": {
+        "schema_version": "1.0.0",
+        "base_currency": "USD",
+        "period_days": 30,
+        "timezone_offset": "+05:00",
+        "sizes": {
+          "invoices": 40,
+          "payments": 36,
+          "issues": 6,
+          "ledger_rows": 320
+        },
+        "errors": {
+          "duplicate_invoice": 0,
+          "payment_allocation_gap": 0,
+          "fx_rate_error": 0,
+          "period_cutoff": 0,
+          "composite": 0
+        },
+        "clean": true,
+        "mode": "train",
+        "variant": 0
+      },
+      "issues": [],
+      "clean": true,
+      "ledger_rows": 272,
+      "documents": 78,
+      "open_files_sha256": "14c9b92c0389229b5b89c042006af88a3e7d7e78ad6e5248e9f9ce18fc5a9520"
+    },
+    {
+      "split": "dev",
+      "directory": "episodes/dev/ep-d9e555e2f2",
+      "episode_id": "ep-d9e555e2f2",
+      "seed": 2004,
+      "config": {
+        "schema_version": "1.0.0",
+        "base_currency": "KZT",
+        "period_days": 30,
+        "timezone_offset": "+05:00",
+        "sizes": {
+          "invoices": 40,
+          "payments": 36,
+          "issues": 6,
+          "ledger_rows": 320
+        },
+        "errors": {
+          "duplicate_invoice": 0,
+          "payment_allocation_gap": 0,
+          "fx_rate_error": 0,
+          "period_cutoff": 0,
+          "composite": 0
+        },
+        "clean": true,
+        "mode": "train",
+        "variant": 3
+      },
+      "issues": [],
+      "clean": true,
+      "ledger_rows": 273,
+      "documents": 77,
+      "open_files_sha256": "3d89bd9aa1778242c6b6a8763cba7e4467c2b19b6bd00a3512b2db40c232be97"
+    },
+    {
+      "split": "dev",
+      "directory": "episodes/dev/ep-cb2e04edc8",
+      "episode_id": "ep-cb2e04edc8",
+      "seed": 2005,
+      "config": {
+        "schema_version": "1.0.0",
+        "base_currency": "KZT",
+        "period_days": 45,
+        "timezone_offset": "+05:00",
+        "sizes": {
+          "invoices": 40,
+          "payments": 36,
+          "issues": 6,
+          "ledger_rows": 420
+        },
+        "errors": {
+          "duplicate_invoice": 0,
+          "payment_allocation_gap": 0,
+          "fx_rate_error": 0,
+          "period_cutoff": 0,
+          "composite": 0
+        },
+        "clean": true,
+        "mode": "train",
+        "variant": 0
+      },
+      "issues": [],
+      "clean": true,
+      "ledger_rows": 358,
+      "documents": 77,
+      "open_files_sha256": "bf5b53e7dc67848c07cce561e8de75512ddc4bc8b0d5fb37102d29c70f0250c5"
+    },
+    {
+      "split": "dev",
+      "directory": "episodes/dev/ep-0dc0a85bf7",
+      "episode_id": "ep-0dc0a85bf7",
+      "seed": 2006,
+      "config": {
+        "schema_version": "1.0.0",
+        "base_currency": "KZT",
+        "period_days": 30,
+        "timezone_offset": "+05:00",
+        "sizes": {
+          "invoices": 40,
+          "payments": 36,
+          "issues": 4,
+          "ledger_rows": 320
+        },
+        "errors": {
+          "duplicate_invoice": 0,
+          "payment_allocation_gap": 0,
+          "fx_rate_error": 0,
+          "period_cutoff": 0,
+          "composite": 2
+        },
+        "clean": false,
+        "mode": "train",
+        "variant": 0
+      },
+      "issues": [
+        "fx_rate_error",
+        "payment_allocation_gap",
+        "period_cutoff",
+        "period_cutoff"
+      ],
+      "clean": false,
+      "ledger_rows": 279,
+      "documents": 79,
+      "open_files_sha256": "91ab29cc414330a244141be8592b8b7eae540888d4b88968a5e70684f4e05200"
+    },
+    {
+      "split": "dev",
+      "directory": "episodes/dev/ep-b76abaed0c",
+      "episode_id": "ep-b76abaed0c",
+      "seed": 2007,
+      "config": {
+        "schema_version": "1.0.0",
+        "base_currency": "KZT",
+        "period_days": 30,
+        "timezone_offset": "+05:00",
+        "sizes": {
+          "invoices": 40,
+          "payments": 36,
+          "issues": 5,
+          "ledger_rows": 320
+        },
+        "errors": {
+          "duplicate_invoice": 1,
+          "payment_allocation_gap": 0,
+          "fx_rate_error": 0,
+          "period_cutoff": 0,
+          "composite": 2
+        },
+        "clean": false,
+        "mode": "train",
+        "variant": 0
+      },
+      "issues": [
+        "duplicate_invoice",
+        "payment_allocation_gap",
+        "payment_allocation_gap",
+        "period_cutoff",
+        "period_cutoff"
+      ],
+      "clean": false,
+      "ledger_rows": 283,
+      "documents": 81,
+      "open_files_sha256": "43a174ce7fa9a81a59a8cf50ebf9e70abb75df6a1fb5c99ce95fba779fe4291e"
+    },
+    {
+      "split": "dev",
+      "directory": "episodes/dev/ep-5d6ef1b09a",
+      "episode_id": "ep-5d6ef1b09a",
+      "seed": 2008,
+      "config": {
+        "schema_version": "1.0.0",
+        "base_currency": "KZT",
+        "period_days": 30,
+        "timezone_offset": "+05:00",
+        "sizes": {
+          "invoices": 40,
+          "payments": 36,
+          "issues": 6,
+          "ledger_rows": 320
+        },
+        "errors": {
+          "duplicate_invoice": 0,
+          "payment_allocation_gap": 1,
+          "fx_rate_error": 1,
+          "period_cutoff": 0,
+          "composite": 2
+        },
+        "clean": false,
+        "mode": "train",
+        "variant": 0
+      },
+      "issues": [
+        "fx_rate_error",
+        "fx_rate_error",
+        "payment_allocation_gap",
+        "payment_allocation_gap",
+        "period_cutoff",
+        "period_cutoff"
+      ],
+      "clean": false,
+      "ledger_rows": 280,
+      "documents": 79,
+      "open_files_sha256": "1a7b08dfa0450d3c89d23b21270822a9f3fa644639f78b3cd02df4f56581c319"
+    },
+    {
+      "split": "dev",
+      "directory": "episodes/dev/ep-ce5081cc78",
+      "episode_id": "ep-ce5081cc78",
+      "seed": 2009,
+      "config": {
+        "schema_version": "1.0.0",
+        "base_currency": "USD",
+        "period_days": 30,
+        "timezone_offset": "+05:00",
+        "sizes": {
+          "invoices": 40,
+          "payments": 36,
+          "issues": 4,
+          "ledger_rows": 320
+        },
+        "errors": {
+          "duplicate_invoice": 0,
+          "payment_allocation_gap": 0,
+          "fx_rate_error": 0,
+          "period_cutoff": 0,
+          "composite": 2
+        },
+        "clean": false,
+        "mode": "train",
+        "variant": 0
+      },
+      "issues": [
+        "fx_rate_error",
+        "payment_allocation_gap",
+        "period_cutoff",
+        "period_cutoff"
+      ],
+      "clean": false,
+      "ledger_rows": 278,
+      "documents": 80,
+      "open_files_sha256": "a11b3a866784c0cd3dc2298b7f1d725952bfa22143e9b53d4a972bafde6ecd42"
+    },
+    {
+      "split": "dev",
+      "directory": "episodes/dev/ep-609dcc4377",
+      "episode_id": "ep-609dcc4377",
+      "seed": 2010,
+      "config": {
+        "schema_version": "1.0.0",
+        "base_currency": "KZT",
+        "period_days": 30,
+        "timezone_offset": "+05:00",
+        "sizes": {
+          "invoices": 40,
+          "payments": 36,
+          "issues": 5,
+          "ledger_rows": 320
+        },
+        "errors": {
+          "duplicate_invoice": 0,
+          "payment_allocation_gap": 0,
+          "fx_rate_error": 0,
+          "period_cutoff": 1,
+          "composite": 2
+        },
+        "clean": false,
+        "mode": "train",
+        "variant": 0
+      },
+      "issues": [
+        "payment_allocation_gap",
+        "payment_allocation_gap",
+        "period_cutoff",
+        "period_cutoff",
+        "period_cutoff"
+      ],
+      "clean": false,
+      "ledger_rows": 282,
+      "documents": 81,
+      "open_files_sha256": "3528d7fd551d5777d80728f25b93f4ff2582486e44babd3f14019c54f3e6a00d"
+    }
+  ]
+}

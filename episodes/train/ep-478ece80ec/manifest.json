@@ -1,0 +1,12 @@
+{
+  "schema_version": "1.0.0",
+  "episode_id": "ep-478ece80ec",
+  "base_currency": "KZT",
+  "period_start": "2026-05-01T09:00:00+05:00",
+  "period_end": "2026-05-30T23:59:59+05:00",
+  "timezone": "Asia/Almaty",
+  "ledger_rows": 273,
+  "documents": 77,
+  "rounding": "half_up",
+  "fx_rate_date": "invoice_date_for_documents,payment_date_for_payments"
+}

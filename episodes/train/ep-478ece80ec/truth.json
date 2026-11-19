@@ -1,0 +1,57 @@
+{
+  "episode_id": "ep-478ece80ec",
+  "issues": [
+    {
+      "type": "payment_allocation_gap",
+      "affected_ids": [
+        "PAY-0007",
+        "INV-0024",
+        "LED-000095",
+        "LED-000096",
+        "LED-000273"
+      ],
+      "expected_amount_minor": 2760000,
+      "currency": "KZT",
+      "allowed_evidence_sets": [
+        [
+          "PAY-0007",
+          "INV-0024",
+          "LED-000095",
+          "LED-000096"
+        ],
+        [
+          "PAY-0007",
+          "INV-0024",
+          "LED-000095",
+          "LED-000096",
+          "LED-000273"
+        ]
+      ],
+      "explanation": "The payment covers the invoice but part of the receipt was not allocated; receivables stay overstated.",
+      "issue_id": "ISS-0001"
+    },
+    {
+      "type": "period_cutoff",
+      "affected_ids": [
+        "INV-0013",
+        "LED-000025",
+        "LED-000026"
+      ],
+      "expected_amount_minor": 9390000,
+      "currency": "KZT",
+      "allowed_evidence_sets": [
+        [
+          "INV-0013",
+          "LED-000025",
+          "LED-000026"
+        ],
+        [
+          "INV-0013",
+          "LED-000025"
+        ]
+      ],
+      "explanation": "The invoice belongs to the reporting period but its posting sits outside the period boundary.",
+      "issue_id": "ISS-0002"
+    }
+  ]
+}

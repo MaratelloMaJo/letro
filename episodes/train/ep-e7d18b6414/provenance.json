@@ -1,0 +1,50 @@
+{
+  "episode_id": "ep-e7d18b6414",
+  "seed_fingerprint": "1004:0",
+  "steps": [
+    {
+      "kind": "fx_rate_error",
+      "scope": "invoice",
+      "invoice_id": "INV-0004",
+      "rows": [
+        "LED-000007",
+        "LED-000008"
+      ],
+      "correct_minor": 153981536,
+      "wrong_minor": 153674188,
+      "wrong_rate_day": "2026-02-18"
+    },
+    {
+      "kind": "fx_rate_error",
+      "scope": "invoice",
+      "invoice_id": "INV-0020",
+      "rows": [
+        "LED-000039",
+        "LED-000040"
+      ],
+      "correct_minor": 39316200,
+      "wrong_minor": 39320132,
+      "wrong_rate_day": "2026-01-31"
+    },
+    {
+      "kind": "period_cutoff",
+      "scope": "invoice",
+      "invoice_id": "INV-0001",
+      "rows": [
+        "LED-000001",
+        "LED-000002"
+      ],
+      "posted_at": "2026-03-04T23:59:59+05:00"
+    },
+    {
+      "kind": "period_cutoff",
+      "scope": "invoice",
+      "invoice_id": "INV-0030",
+      "rows": [
+        "LED-000059",
+        "LED-000060"
+      ],
+      "posted_at": "2026-03-04T23:59:59+05:00"
+    }
+  ]
+}

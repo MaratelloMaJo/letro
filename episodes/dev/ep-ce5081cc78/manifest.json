@@ -1,0 +1,12 @@
+{
+  "schema_version": "1.0.0",
+  "episode_id": "ep-ce5081cc78",
+  "base_currency": "USD",
+  "period_start": "2025-09-01T09:00:00+05:00",
+  "period_end": "2025-09-30T23:59:59+05:00",
+  "timezone": "Asia/Almaty",
+  "ledger_rows": 278,
+  "documents": 80,
+  "rounding": "half_up",
+  "fx_rate_date": "invoice_date_for_documents,payment_date_for_payments"
+}
