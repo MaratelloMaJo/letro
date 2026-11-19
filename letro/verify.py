@@ -1006,9 +1006,12 @@ def criterion_reproducibility() -> list[Check]:
                 "f1"
             ):
                 return False, "permutation changed the oracle answer or reward"
-            check = _reconciliation_result(permuted)
-            if check.metrics.get("f1") != 1.0:
-                return False, "reconciliation fails after permutation"
+            original_check = _reconciliation_result(original)
+            permuted_check = _reconciliation_result(permuted)
+            if original_check.metrics != permuted_check.metrics:
+                return False, "permutation changed the baseline metrics"
+            if original_check.steps != permuted_check.steps:
+                return False, "permutation changed the baseline step count"
             return True, f"all ids renamed, F1 {after.metrics.get('f1')} preserved"
 
         _run(checks, f"permutation_{index + 1:02d}", permutation)

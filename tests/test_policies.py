@@ -10,6 +10,7 @@ from letro.policies import (
     OraclePolicy,
     RandomExplorerPolicy,
     ReconciliationPolicy,
+    ThoroughPolicy,
     make_policy,
 )
 from letro.trajectory import run_episode
@@ -25,6 +26,7 @@ def run(ep, policy):
 class PolicyTests(unittest.TestCase):
     def test_factory(self):
         self.assertIsInstance(make_policy("reconciliation"), ReconciliationPolicy)
+        self.assertIsInstance(make_policy("thorough"), ThoroughPolicy)
         self.assertIsInstance(make_policy("mark_all"), MarkAllPolicy)
         self.assertIsInstance(make_policy("random_explorer", seed=1), RandomExplorerPolicy)
         with self.assertRaises(ValueError):
@@ -32,20 +34,39 @@ class PolicyTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             make_policy("nope")
 
-    def test_reconciliation_solves_composites(self):
+    def test_reconciliation_is_an_honest_imperfect_baseline(self):
         ep = episode(101, config(error_counts=errors(composite=2)))
         result, metrics = run(ep, ReconciliationPolicy())
         self.assertTrue(result.terminated)
         self.assertFalse(result.truncated)
-        self.assertEqual(metrics["f1"], 1.0)
-        self.assertLess(result.steps, 30)
+        # It finds the provable duplicate / FX / cut-off issues but
+        # over-reports open invoices, so it must not be perfect.
+        self.assertGreater(metrics["recall"], 0.5)
+        self.assertGreater(metrics["fp"], 0)
+        self.assertLess(metrics["f1"], 1.0)
 
-    def test_reconciliation_keeps_silence_on_clean(self):
+    def test_reconciliation_over_reports_clean_books(self):
         ep = episode(102, config(clean=True))
         result, metrics = run(ep, ReconciliationPolicy())
-        self.assertEqual(metrics["f1"], 1.0)
+        self.assertTrue(result.terminated)
         self.assertEqual(metrics["tp"], 0)
-        self.assertGreater(result.reward, 0.9)
+        self.assertGreater(metrics["fp"], 0)
+        self.assertEqual(metrics["f1"], 0.0)
+        self.assertEqual(result.reward, -1.0)
+
+    def test_thorough_reference_is_perfect(self):
+        for seed, cfg in (
+            (106, config(error_counts=errors(composite=2))),
+            (107, config(clean=True)),
+            (108, config(error_counts=errors(duplicate=1, gap=1, fx=1, cutoff=1))),
+        ):
+            with self.subTest(seed=seed):
+                ep = episode(seed, cfg)
+                result, metrics = run(ep, ThoroughPolicy())
+                self.assertTrue(result.terminated)
+                self.assertEqual(metrics["f1"], 1.0)
+                self.assertEqual(metrics["fp"], 0)
+                self.assertEqual(metrics["fn"], 0)
 
     def test_random_explorer_is_deterministic(self):
         ep = episode(103)

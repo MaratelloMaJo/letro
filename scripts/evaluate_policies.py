@@ -22,7 +22,7 @@ from letro.generator import load_episode  # noqa: E402
 from letro.policies import make_policy  # noqa: E402
 from letro.trajectory import run_episode  # noqa: E402
 
-POLICIES = ("random_explorer", "reconciliation", "mark_all", "oracle")
+POLICIES = ("random_explorer", "reconciliation", "thorough", "mark_all", "oracle")
 
 
 def main() -> int:

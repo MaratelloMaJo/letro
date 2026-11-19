@@ -9,7 +9,7 @@ import unittest
 from letro.factory import env_from_episode
 from letro.generator import generate_episode
 from letro.permute import assert_no_reused_ids, permute_episode
-from letro.policies import OraclePolicy, ReconciliationPolicy
+from letro.policies import OraclePolicy, ReconciliationPolicy, ThoroughPolicy
 from letro.trajectory import run_episode
 from tests.support import config, errors
 
@@ -75,14 +75,25 @@ class ReproducibilityTests(unittest.TestCase):
             94, config(error_counts=errors(duplicate=2, gap=1, composite=1))
         )
         permuted = permute_episode(original, salt="unit")
-        _result, metrics = reconciliation(permuted)
-        self.assertEqual(metrics["f1"], 1.0)
+        _before, before_metrics = reconciliation(original)
+        _after, after_metrics = reconciliation(permuted)
+        self.assertEqual(before_metrics, after_metrics)
+
+    def test_thorough_survives_permutation(self):
+        original = generate_episode(
+            96, config(error_counts=errors(duplicate=1, gap=1, fx=1, cutoff=1))
+        )
+        permuted = permute_episode(original, salt="unit")
+        env, evaluator = env_from_episode(permuted)
+        run_episode(env, ThoroughPolicy(), evaluator=evaluator)
+        self.assertEqual(evaluator.result()["f1"], 1.0)
 
     def test_reconciliation_survives_permutation_with_clean_books(self):
         original = generate_episode(95, config(clean=True))
         permuted = permute_episode(original, salt="unit")
-        _result, metrics = reconciliation(permuted)
-        self.assertEqual(metrics["f1"], 1.0)
+        _before, before_metrics = reconciliation(original)
+        _after, after_metrics = reconciliation(permuted)
+        self.assertEqual(before_metrics, after_metrics)
 
 
 if __name__ == "__main__":

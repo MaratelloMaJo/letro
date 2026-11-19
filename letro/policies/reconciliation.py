@@ -1,24 +1,34 @@
-"""Deterministic reconciliation baseline.
+"""Naive reconciliation baseline.
 
-The policy pages every open table, rebuilds the arithmetic an auditor would do
-with paper and a calculator, and submits the discrepancies it can prove. It
-uses only observed records: no truth, no generator, no filesystem.
+This is deliberately a simple auditor, not the reference solution. It pages
+every open table, converts amounts with the published FX rates and applies four
+straightforward rules:
+
+1. an invoice with more than one receivable debit is reported as a duplicate;
+2. a receivable debit that disagrees with the invoice-date rate is an FX error;
+3. a document inside the period whose posting sits outside it is a cut-off;
+4. **any invoice that still shows an open balance is reported as an
+   unallocated payment**, with the remaining balance as the amount.
+
+Rule 4 is the deliberate simplification. Real books legitimately contain open
+and part-paid invoices, and a true allocation gap belongs to one payment rather
+than to the invoice balance. The baseline therefore over-reports clean companies
+and mis-states the amount behind a part-paid invoice. ``ThoroughPolicy`` keeps
+the exact reference arithmetic for comparison.
 """
 
 from __future__ import annotations
 
-from datetime import datetime
 from decimal import Decimal
 from typing import Any
 
 from ..constants import TABLES
 from ..money import convert_minor
-from .base import Policy, inside, proportional_base, rate_for, sorted_rate_lookup
+from .base import Policy, inside, rate_for, sorted_rate_lookup
 
 AR = "1100"
 REVENUE = "4000"
 CASH = "1000"
-SUSPENSE = "9999"
 
 
 class ReconciliationPolicy(Policy):
@@ -36,7 +46,6 @@ class ReconciliationPolicy(Policy):
         self._episode_id = str(info.get("episode_id", ""))
         self._manifest: dict[str, Any] | None = None
         self._policy: dict[str, Any] = {}
-        self._finished = False
         self._submitted = False
         self._collected = False
 
@@ -60,7 +69,6 @@ class ReconciliationPolicy(Policy):
                     else:
                         self._cursor = int(next_cursor)
             elif not last.get("ok") and self._pending_table is not None:
-                # A bounded tool error must not trap the policy in a loop.
                 self._advance_table()
 
         if self._collected:
@@ -86,20 +94,18 @@ class ReconciliationPolicy(Policy):
 
     # -------------------------------------------------------------- analysis
     def _submit(self) -> dict[str, Any]:
-        if not self._submitted:
-            self._submitted = True
-            self._finished = True
-            findings = self._findings()
-        else:
-            findings = []
-            self._finished = True
+        if self._submitted:
             return {
                 "type": "submit",
-                "findings": {"episode_id": self._episode_id, "findings": findings},
+                "findings": {"episode_id": self._episode_id, "findings": []},
             }
+        self._submitted = True
         return {
             "type": "submit",
-            "findings": {"episode_id": self._episode_id, "findings": findings[:30]},
+            "findings": {
+                "episode_id": self._episode_id,
+                "findings": self._findings()[:30],
+            },
         }
 
     def _findings(self) -> list[dict[str, Any]]:
@@ -133,13 +139,6 @@ class ReconciliationPolicy(Policy):
                 base,
             )
 
-        def rows_for(**filters: Any) -> list[dict[str, Any]]:
-            return [
-                row
-                for row in ledger
-                if all(row.get(key) == value for key, value in filters.items())
-            ]
-
         def evidence(values: list[str]) -> list[str]:
             unique = list(dict.fromkeys(value for value in values if value))
             return unique[:10]
@@ -148,7 +147,6 @@ class ReconciliationPolicy(Policy):
             kind: str,
             affected: list[str],
             amount: int,
-            currency: str,
             allowed: list[list[str]],
             explanation: str,
         ) -> dict[str, Any]:
@@ -161,7 +159,7 @@ class ReconciliationPolicy(Policy):
                 "type": kind,
                 "affected_ids": list(dict.fromkeys(affected)),
                 "claimed_amount_minor": int(amount),
-                "currency": currency,
+                "currency": base,
                 "evidence_ids": sets[0] if sets else [],
                 "explanation": explanation,
             }
@@ -180,76 +178,55 @@ class ReconciliationPolicy(Policy):
             ar_rows.sort(key=lambda row: (row["timestamp"], row["row_id"]))
             if len(ar_rows) <= 1:
                 continue
-            revenue_all = [
+            revenue_rows = [
                 row
                 for row in ledger
                 if row["invoice_id"] == invoice_id
                 and row["account"] == REVENUE
                 and row["credit_minor"] > 0
             ]
-            revenue_all.sort(key=lambda row: (row["timestamp"], row["row_id"]))
-            full_evidence = (
+            revenue_rows.sort(key=lambda row: (row["timestamp"], row["row_id"]))
+            extra = ar_rows[1]
+            affected = (
                 [invoice_id]
                 + [row["row_id"] for row in ar_rows]
-                + [row["row_id"] for row in revenue_all]
+                + [row["row_id"] for row in revenue_rows]
             )
-            for extra in ar_rows[1:]:
-                revenue_rows = [
-                    row
-                    for row in revenue_all
-                    if row["timestamp"] == extra["timestamp"]
-                    and row["credit_minor"] == extra["debit_minor"]
-                ]
-                affected = [invoice_id, extra["row_id"]] + [
-                    row["row_id"] for row in revenue_rows
-                ]
-                findings.append(
-                    build(
-                        "duplicate_invoice",
-                        affected,
-                        extra["debit_minor"],
-                        base,
-                        [full_evidence],
-                        "The invoice is posted more than once; the extra entry "
-                        "inflates receivables and revenue.",
-                    )
+            findings.append(
+                build(
+                    "duplicate_invoice",
+                    affected,
+                    extra["debit_minor"],
+                    [affected, [invoice_id, extra["row_id"]]],
+                    "The invoice is posted more than once; the extra entry "
+                    "inflates receivables and revenue.",
                 )
+            )
 
-        # 2. Payment received but not fully allocated.
-        for payment_id, payment in payments.items():
-            if payment["amount_minor"] <= 0:
-                continue
-            refs = payment.get("invoice_refs") or []
-            if not refs or refs[0] not in invoices:
-                continue
-            invoice = invoices[refs[0]]
-            covered = min(abs(payment["amount_minor"]), invoice["total_minor"])
-            expected = proportional_base(invoice_base(invoice), covered, invoice["total_minor"])
+        # 2. Naive rule: every open invoice balance looks like a gap.
+        for invoice_id, invoice in invoices.items():
             ar_rows = [
                 row
                 for row in ledger
-                if row["payment_id"] == payment_id
+                if row["invoice_id"] == invoice_id
                 and row["account"] == AR
-                and row["credit_minor"] > 0
+                and row["debit_minor"] > 0
             ]
-            actual = sum(row["credit_minor"] for row in ar_rows)
-            gap = expected - actual
-            if gap <= tolerance:
+            credits = sum(
+                row["credit_minor"]
+                for row in ledger
+                if row["invoice_id"] == invoice_id and row["account"] == AR
+            )
+            balance = invoice_base(invoice) - credits
+            if balance <= tolerance:
                 continue
             cash_rows = [
-                row for row in ledger if row["payment_id"] == payment_id and row["account"] == CASH
-            ]
-            suspense_rows = [
-                row for row in ledger if row["payment_id"] == payment_id and row["account"] == SUSPENSE
+                row
+                for row in ledger
+                if row["invoice_id"] == invoice_id and row["account"] == CASH
             ]
             affected = (
-                [payment_id, invoice["invoice_id"]]
-                + [row["row_id"] for row in cash_rows]
-                + [row["row_id"] for row in ar_rows]
-                + [row["row_id"] for row in suspense_rows]
-            )
-            proof = (
-                [payment_id, invoice["invoice_id"]]
+                [invoice_id]
                 + [row["row_id"] for row in cash_rows]
                 + [row["row_id"] for row in ar_rows]
             )
@@ -257,11 +234,10 @@ class ReconciliationPolicy(Policy):
                 build(
                     "payment_allocation_gap",
                     affected,
-                    gap,
-                    base,
-                    [proof, proof + [row["row_id"] for row in suspense_rows]],
-                    "The receipt covers the invoice but part of it was not "
-                    "allocated to receivables.",
+                    balance,
+                    [affected, [invoice_id]],
+                    "The invoice still shows an open balance; part of the "
+                    "receipt looks unallocated.",
                 )
             )
 
@@ -293,7 +269,6 @@ class ReconciliationPolicy(Policy):
                         "fx_rate_error",
                         affected,
                         delta,
-                        base,
                         [affected, [invoice_id, row["row_id"]]],
                         "The posted base amount does not match the invoice-date "
                         "rate required by the policy.",
@@ -335,7 +310,6 @@ class ReconciliationPolicy(Policy):
                         "fx_rate_error",
                         affected,
                         delta,
-                        base,
                         [affected, [payment_id, row["row_id"]]],
                         "The cash receipt was converted at a rate that does not "
                         "match the payment-date policy.",
@@ -373,7 +347,6 @@ class ReconciliationPolicy(Policy):
                     "period_cutoff",
                     affected,
                     invoice_base(invoice),
-                    base,
                     [affected, [invoice_id, outside[0]["row_id"]]],
                     "The invoice belongs to the period but its posting sits "
                     "outside the period boundary.",
@@ -408,7 +381,6 @@ class ReconciliationPolicy(Policy):
                     "period_cutoff",
                     affected,
                     payment_base(payment),
-                    base,
                     [affected, [payment_id, outside[0]["row_id"]]],
                     "The payment belongs to the period but its posting sits "
                     "outside the period boundary.",

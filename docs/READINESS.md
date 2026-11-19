@@ -32,16 +32,16 @@ offline, reproducible RL environment.
 | --- | --- | --- |
 | One command verifies the submission | `python -m letro.verify` → `TOTAL 100.00`, `RESULT: PASS`, exit 0; 2.58 s | PASS |
 | A clean copy works without local state | copied the tree to `%TEMP%\letro-clean-audit`, removed `.git`, ran the verifier → 100.00, exit 0 | PASS |
-| Tests pass | `python -m unittest discover -s tests -v` → 76 tests, 0 failures, 3.3 s | PASS |
+| Tests pass | `python -m unittest discover -s tests -q` → 78 tests, 0 failures, 3.3 s (also 3.11.9) | PASS |
 | Truth cannot leak into observations | `letro/env.py` holds only open data + a `finalize` callback; `letro/evaluator.py` owns truth; `letro/trajectory.py` scans observations for forbidden keys; `tests/test_leaks.py` | PASS |
 | Every truth issue is provable from open files | `letro/generator/audit.py` reads only open records; generation raises on count mismatch; verifier data criterion 20/20; evidence ids resolve in `tests/test_generator.py` | PASS |
 | Reward resists mark-all and persuasive text | one-to-one matching, canonical ids, evidence sets; mark_all F1 0.000, reward -1.000; `tests/test_attacks.py` | PASS |
 | Determinism and id/order invariance | byte-identical replay; permutation renames and shuffles all ids; 20/20 paired checks; `tests/test_reproducibility.py` | PASS |
-| Trajectories contain no closed truth | 382 records, 30 runs, exact seven fields; validator rejects leaks; `trajectories/summary.json` | PASS |
+| Trajectories contain no closed truth | 500 records, 40 runs, exact seven fields; validator rejects leaks; `trajectories/summary.json` | PASS |
 | Container is defined | `Dockerfile` uses `python:3.11-slim`, non-root, `CMD ["python", "-m", "letro.verify"]` | PASS (definition) |
-| Container image actually builds and runs | `docker build -t letro:1.0.0 .` → daemon unavailable: `open //./pipe/dockerDesktopLinuxEngine` | UNKNOWN |
-| Runs on Python 3.11 exactly | local runtime is 3.14.6; `py -3.11` not installed; Docker would prove it | UNKNOWN |
-| No secrets in the tree | pattern scan for `sk-…`, `AKIA…`, private keys, passwords, API keys → no matches; zero commits at audit time | PASS |
+| Container image actually builds and runs | `docker build --tag letro:1.0.0 .` and `docker run --rm letro:1.0.0` → `TOTAL 100.00`, `RESULT: PASS`, Python 3.11.18 | PASS |
+| Runs on Python 3.11 exactly | `py -3.11 -m unittest discover -s tests -q` → 78 tests OK; `py -3.11 -m letro.verify` → 100.00 PASS | PASS |
+| No secrets in the tree | pattern scan for `sk-…`, `AKIA…`, private keys, passwords, API keys → no matches; working tree and git history | PASS |
 | No network, shell, SQL or filesystem tool | `letro/tools.py` exposes four read-only actions and a restricted AST calculator; no `subprocess`, `socket`, `os.system`, `eval` | PASS |
 | Episodes are within the data contract | 20 episodes, 272–442 ledger rows, 76–112 documents, 0–6 issues; `episodes/index.json`; verifier data 20/20 | PASS |
 
@@ -51,9 +51,9 @@ offline, reproducible RL environment.
 | --- | --- | --- |
 | P0 Intake | PASS | Product, audience, core journey, stack, artifact and risk map are written down above and in `DESIGN.md`. |
 | P1 Workability | PASS | Clean copy starts with one command, no dependencies, no manual seeding; core journey completes in 2.58 s. |
-| P2 Trust | PASS | 76 tests, 80 verifier checks, read-only tool surface, safe calculator, derived truth, no secrets, deterministic data, measured limits. Residual risk: no external accounting review. |
+| P2 Trust | PASS | 78 tests, 80 verifier checks, read-only tool surface, safe calculator, derived truth, no secrets, deterministic data, measured limits. Residual risk: no external accounting review. |
 | P3 Product and UX | PASS for the brief / WARN for a general product | The CLI output is clear, the demo is scripted and the README carries measured baselines. There is no GUI, which the brief does not require. |
-| P4 Release | WARN | Reproducible and deterministic, but no CI workflow, no deployed service, no runbook or monitoring, and the Docker image is unverified because the daemon is down. These are not hackathon blockers. |
+| P4 Release | WARN | Reproducible and deterministic, and the container builds and passes 100.00, but no CI workflow, no deployed service, no runbook or monitoring. These are not hackathon blockers. |
 
 ## 5. Score table (supplied competition rubric)
 
@@ -73,20 +73,19 @@ The score is produced by the verifier, not hand-computed.
 These do not block the hackathon submission; they block a claim of production service
 readiness.
 
-1. **Container image is unverified.** `docker build` could not reach the daemon.
-   Impact: the advertised Python 3.11 runtime is untested. Fix: start Docker Desktop,
-   run the build and the image, confirm `RESULT: PASS`.
-2. **No CI.** `.github/workflows` is absent. Impact: a future change can break the
+1. **No CI.** `.github/workflows` is absent. Impact: a future change can break the
    verifier without a gate. Fix: a workflow that runs the unit tests and
    `python -m letro.verify` on every push.
-3. **No independent accounting review.** The generator, reference audit and
-   reconciliation policy share conventions. Impact: a wrong convention would be
+2. **No independent accounting review.** The generator, reference audit and
+   `thorough` reference policy share conventions. Impact: a wrong convention would be
    consistently wrong. Fix: a qualified accountant reviews 20 episodes and the four
    error definitions.
-4. **The rule-following baseline is near-perfect.** Reconciliation reaches F1 1.000.
-   Impact: the environment proves coherence, not LLM audit capability. Fix: a harder
-   variant with noisy documents and judgment calls, plus a trained baseline.
-5. **No deployment, runbook or monitoring.** There is no service to observe. Impact:
+3. **No trained model and no hard baseline.** The naive `reconciliation` heuristic
+   scores F1 0.146, while the `thorough` reference scores 1.000. Impact: the gap proves
+   the environment and matcher are coherent and that a simple rule is not enough, but
+   it does not measure LLM audit capability. Fix: a harder variant with noisy
+   documents and judgment calls, plus a trained baseline.
+4. **No deployment, runbook or monitoring.** There is no service to observe. Impact:
    none for an offline package; blocking for a hosted product. Fix: only if the
    release target changes.
 
@@ -137,21 +136,18 @@ No critical or high findings. Low-severity observations:
 - Independent accounting review of the four error definitions and 20 episodes.
   Acceptance: signed review with no unresolved correctness issue.
 - Add a harder episode family with noisy documents and a trained baseline.
-  Acceptance: reconciliation no longer reaches F1 1.000 on the new family.
+  Acceptance: the `thorough` reference no longer reaches F1 1.000 on the new family,
+  and a trained policy beats the naive heuristic by a measured margin.
 
 ## 10. What I need from you
 
-- A running Docker daemon (or permission to start Docker Desktop) to close the
-  container check.
-- A second machine or clean Python 3.11 environment for an independent rerun.
+- A second machine for an independent rerun; the container already passes 100.00
+  on Python 3.11.18.
 - A qualified accountant if the claim is extended beyond a synthetic competition
   artefact.
 
 ## 11. Not verified
 
-- Docker image build and run: daemon unavailable at audit time.
-- Execution on Python 3.11 exactly: only 3.14.6 is installed locally; the code avoids
-  3.12+ syntax, but this is a static argument, not a run.
 - Real audit suitability: the data is synthetic and no accountant reviewed it.
 - Out-of-family generalization: hidden seeds share the generator family.
 - A trained model: none is shipped; the demo uses a scripted policy.

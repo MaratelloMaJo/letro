@@ -10,7 +10,10 @@ from .mark_all import MarkAllPolicy
 from .oracle import OraclePolicy
 from .random_explorer import RandomExplorerPolicy
 from .reconciliation import ReconciliationPolicy
+from .thorough import ThoroughPolicy
 
+# The four adapters required by the brief. ``thorough`` is an additional
+# exact reference used by the demo and as an upper bound.
 POLICY_NAMES = ("random_explorer", "reconciliation", "mark_all", "oracle")
 
 
@@ -21,6 +24,8 @@ def make_policy(
         return RandomExplorerPolicy(seed=seed, **kwargs)
     if name == "reconciliation":
         return ReconciliationPolicy()
+    if name == "thorough":
+        return ThoroughPolicy()
     if name == "mark_all":
         return MarkAllPolicy()
     if name == "oracle":
@@ -37,5 +42,6 @@ __all__ = [
     "Policy",
     "RandomExplorerPolicy",
     "ReconciliationPolicy",
+    "ThoroughPolicy",
     "make_policy",
 ]

@@ -59,7 +59,7 @@ and `episodes/index.json`. The index records every seed, resolved config, issue
 type, row/document count and the SHA-256 of the open files. `record_trajectories.py`
 writes `trajectories/trajectories.jsonl` and `summary.json`; `evaluate_policies.py`
 writes `docs/evidence/policy-metrics.json`; `demo.py` prints a scripted
-reconciliation run on a composite episode and an empty submission on clean books.
+thorough run on a composite episode and an empty submission on clean books.
 
 ## Episode data contract
 
@@ -161,23 +161,32 @@ data and a `finalize` callback owned by the runner.
 
 ## Baselines
 
-All four adapters were measured on the same ten dev episodes (five clean, five with
+All adapters were measured on the same ten dev episodes (five clean, five with
 errors, including composites). Full data: `docs/evidence/policy-metrics.json`.
 
 | Policy | Mean F1 | Clean F1 | Erroneous F1 | Mean reward | Mean steps | TP | FP | FN |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | `random_explorer` | 0.400 | 0.800 | 0.000 | -0.211 | 15.0 | 0 | 12 | 24 |
-| `reconciliation` | 1.000 | 1.000 | 1.000 | 0.978 | 11.8 | 24 | 0 | 0 |
+| `reconciliation` | 0.146 | 0.000 | 0.293 | -0.717 | 11.8 | 15 | 143 | 9 |
+| `thorough` (reference) | 1.000 | 1.000 | 1.000 | 0.978 | 11.8 | 24 | 0 | 0 |
 | `mark_all` | 0.000 | 0.000 | 0.000 | -1.000 | 2.0 | 0 | 300 | 24 |
 | `oracle` (evaluator side) | 1.000 | 1.000 | 1.000 | 1.000 | 1.0 | 24 | 0 | 0 |
 
-The oracle reads closed truth and exists only to test the evaluator. The
-reconciliation adapter is a strong scripted heuristic that mirrors the published
-audit rules; it is not evidence that a language model can perform the same audit.
+The `reconciliation` adapter is an honest, simple heuristic: it finds duplicate
+postings, FX mismatches and cut-offs, but it reports every invoice with an open
+balance as an unallocated payment. Legitimately open invoices therefore become
+false positives (clean F1 0.000) and a gap behind a part-paid invoice gets the
+wrong amount. Its low score is the measured evidence that the task is not solved
+by a naive rule.
+
+The `thorough` adapter is the exact reference arithmetic used as an upper bound
+and in the demo. It proves the environment is solvable and the matcher is
+correct; it is not evidence that a language model can perform the same audit.
+The oracle reads closed truth and exists only to test the evaluator.
 
 ## Trajectories
 
-`trajectories/trajectories.jsonl` contains 382 records from 30 runs over all 20
+`trajectories/trajectories.jsonl` contains 500 records from 40 runs over all 20
 episodes. Every record has exactly seven fields: `episode_id`, `step`, `action`,
 `observation`, `reward`, `terminated`, `truncated`. Observations are scanned for
 forbidden keys before writing; `truth.json`, `provenance.json`, issue ids, expected
@@ -197,11 +206,11 @@ must be preserved, which they are for all 20 paired checks.
 ```text
 letro/                 environment, tools, matcher, reward, evaluator, verifier
 letro/generator/       clean company builder, error injection, reference audit
-letro/policies/        four baseline adapters
+letro/policies/        four baseline adapters plus the thorough reference
 scripts/               episode build, trajectory recording, policy metrics, demo
 episodes/train|dev/    10 + 10 open episodes with closed labels
 trajectories/          recorded runs and summary
-tests/                 76 unit and integration tests
+tests/                 78 unit and integration tests
 docs/                  design, failure analysis, readiness, evidence
 ```
 
@@ -210,9 +219,10 @@ docs/                  design, failure analysis, readiness, evidence
 - The data is synthetic and deliberately small. The four-type taxonomy and the
   ±1 minor-unit tolerance are competition conventions, not a model of materiality
   or of a real audit.
-- The reconciliation baseline is near-perfect because it re-implements the same
-  published rules as the reference audit. It measures whether the environment and
-  matcher are coherent, not whether an LLM can audit.
+- The simple reconciliation baseline is intentionally imperfect: it finds the
+  provable duplicate, FX and cut-off issues but over-reports open invoices, so it
+  scores 0.146 on dev. The `thorough` reference reaches 1.000 and proves the
+  environment is solvable; neither number says anything about an LLM.
 - Hidden grading seeds come from the same generator family as the open episodes.
   Generalization is therefore measured within one distribution; out-of-family
   documents, currencies or accounting standards are not covered.

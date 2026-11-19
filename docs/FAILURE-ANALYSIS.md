@@ -6,25 +6,31 @@ fixed, and which risks remain. Numbers come from the shipped artefacts and from
 
 ## 1. Measured baseline behaviour
 
-Ten dev episodes: five clean, five with errors (including composites). The same four
+Ten dev episodes: five clean, five with errors (including composites). The same five
 adapters ran on all ten.
 
 | Policy | Mean F1 | Clean F1 | Erroneous F1 | Mean reward | Mean steps | TP | FP | FN |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | random_explorer | 0.400 | 0.800 | 0.000 | -0.211 | 15.0 | 0 | 12 | 24 |
-| reconciliation | 1.000 | 1.000 | 1.000 | 0.978 | 11.8 | 24 | 0 | 0 |
+| reconciliation | 0.146 | 0.000 | 0.293 | -0.717 | 11.8 | 15 | 143 | 9 |
+| thorough (reference) | 1.000 | 1.000 | 1.000 | 0.978 | 11.8 | 24 | 0 | 0 |
 | mark_all | 0.000 | 0.000 | 0.000 | -1.000 | 2.0 | 0 | 300 | 24 |
 | oracle | 1.000 | 1.000 | 1.000 | 1.000 | 1.0 | 24 | 0 | 0 |
 
-The ordering is the intended signal: a random policy is punished for false
-accusations, marking everything is the worst answer, the rule-following baseline
-solves the set, and the oracle sets the ceiling. The oracle is evaluator-side only and
-is not a baseline a model can use.
+The naive `reconciliation` heuristic is the scored baseline. It detects duplicate
+postings, FX mismatches and cut-offs, but it treats every invoice with an open
+balance as an unallocated payment. On clean books it therefore accuses 12-23
+invoices per episode and scores F1 0.000; on erroneous books it finds 15 of 24
+issues but pays 143 false positives. This is the measured difficulty the
+environment is supposed to expose: a simple rule is not enough.
+
+The `thorough` reference mirrors the audit arithmetic and reaches F1 1.000 on the
+same episodes. It proves solvability and matcher correctness, not model capability.
+The oracle is evaluator-side only and sets the ceiling.
 
 The random explorer's clean mean F1 of 0.800 is not a bug: on four clean episodes it
 stays silent and gets F1 = 1.0; on one it submits a guessed row and gets F1 = 0.0.
-Averaged over five clean episodes that is 0.800. This is exactly the behaviour the
-clean-book checks are meant to expose.
+Averaged over five clean episodes that is 0.800.
 
 ## 2. Bugs found during development
 
@@ -66,8 +72,8 @@ The recorder intentionally runs the same episode with more than one policy. The 
 validator treated a second `step = 1` as an out-of-order step and rejected the file.
 Fixed to track runs: `step = 1` starts a new run only after the previous run is
 finished, a run cannot restart before it ends, and a run cannot continue after
-termination or truncation. The shipped log validates as 382 records, 20 episodes and
-30 runs.
+termination or truncation. The shipped log validates as 500 records, 20 episodes and
+40 runs.
 
 ### 2.5 A partial single payment was allocated as a full payment
 
@@ -95,24 +101,26 @@ proportional. This removed a class of false negatives from clean books.
 - Leaks: forbidden-key scan over observations and info, recorder rejection, exact
   seven-field trajectory schema.
 
-The suite has 76 tests and passes in about 3 seconds on the development machine. The
+The suite has 78 tests and passes in about 3 seconds on the development machine. The
 verifier's 80 technical checks all pass.
 
 ## 4. Residual risks
 
-- **Shared assumptions.** The generator, reference audit and reconciliation policy
-  were written by the same author and share accounting conventions. The audit reads
-  only open files and is a separate code path from injection, but a wrong convention
-  would be wrong consistently. External review of the accounting rules is the best
-  mitigation.
+- **Shared assumptions.** The generator, reference audit and `thorough` reference
+  policy were written by the same author and share accounting conventions. The audit
+  reads only open files and is a separate code path from injection, but a wrong
+  convention would be wrong consistently. External review of the accounting rules is
+  the best mitigation.
 - **Within-family generalization.** Hidden seeds use the same generator. The
   permutation check covers id and order changes, not new document formats, new
   currencies or new error types. The environment does not claim out-of-family
   generalization.
-- **Rule-following is enough.** Reconciliation reaches F1 = 1.000 by re-implementing
-  the published rules. This is a coherence check, not evidence that an LLM can audit.
-  A harder variant would add noisy documents or require judgment calls that the
-  policy cannot read off a formula.
+- **The naive baseline fails, by design.** `reconciliation` scores F1 0.146 because it
+  accuses every open invoice; `thorough` reaches 1.000 because it mirrors the published
+  rules. The gap proves the matcher and reward are coherent and that a simple rule is
+  not enough, but it is still not evidence that an LLM can audit. A harder variant
+  would add noisy documents or require judgment calls that neither policy can read off
+  a formula.
 - **Finite seed coverage.** The tests use a fixed set of seeds. They do not prove
   that every seed in the allowed range generates a solvable episode, although the
   generator raises rather than shipping a mismatch.

@@ -141,7 +141,9 @@ record order, which is exactly the kind of overfitting the rubric tests.
 ## 7. Engineering trade-offs
 
 - **Truth derived, not authored.** Slightly slower generation, much stronger
-  solvability guarantee. The audit is also reused by the reconciliation baseline.
+  solvability guarantee. The audit is not reused by the scored baseline: the
+  `thorough` reference keeps it as an upper bound, while `reconciliation` is a
+  deliberately naive heuristic so the measured gap means something.
 - **Two allowed evidence sets per issue where a second complete proof exists.**
   Gives the auditor a reasonable choice (for example, with or without the suspense
   row) without accepting an incomplete proof. A duplicate invoice requires the
@@ -152,9 +154,11 @@ record order, which is exactly the kind of overfitting the rubric tests.
   special composite type, at the cost of requiring two findings.
 - **No third-party dependencies.** Makes the container and the offline check trivial;
   the cost is hand-written CSV/JSON handling and no property-based testing library.
-- **Reconciliation baseline mirrors the audit.** It is a strong sanity check for the
-  environment, but it is not evidence of model capability. The random, mark-all and
-  oracle adapters bracket the reward from below and above.
+- **Two honest baselines instead of one perfect one.** The naive `reconciliation`
+  heuristic finds provable duplicates, FX errors and cut-offs but treats every open
+  invoice balance as an unallocated payment; the `thorough` reference mirrors the
+  audit and reaches F1 1.000. The gap between them is the measured difficulty, and
+  the random, mark-all and oracle adapters bracket the reward from below and above.
 
 ## 8. Measured evidence
 
@@ -164,10 +168,12 @@ presence of this note, the README, the container, the trajectory log, the failur
 analysis and the limitations section.
 
 On ten dev episodes the scripted baselines behave as intended: random exploration
-gets mean F1 0.400 and reward -0.211, mark-all gets F1 0.000 and reward -1.000,
-reconciliation gets F1 1.000 and reward 0.978, and the evaluator-side oracle gets
-F1 1.000 and reward 1.000. The gap between reconciliation and mark-all is the
-signal the environment is supposed to provide.
+gets mean F1 0.400 and reward -0.211, mark-all gets F1 0.000 and reward -1.000, the
+naive reconciliation heuristic gets F1 0.146 and reward -0.717, the `thorough`
+reference gets F1 1.000 and reward 0.978, and the evaluator-side oracle gets
+F1 1.000 and reward 1.000. The naive baseline fails on clean books (F1 0.000)
+because it accuses every open invoice, which is exactly the behaviour the reward
+must punish; the reference proves the same episodes are solvable.
 
 ## 9. Limitations
 

@@ -31,6 +31,7 @@ RUNS = [
     ("train", "reconciliation"),
     ("train", "random_explorer"),
     ("dev", "reconciliation"),
+    ("dev", "thorough"),
 ]
 
 

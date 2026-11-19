@@ -1,8 +1,8 @@
 """Scripted demo: one composite dev episode plus one clean episode.
 
 Run ``python scripts/demo.py``. No model, network or GPU is involved. The
-reconciliation policy investigates the files exactly through the public tools,
-then submits findings with evidence.
+thorough reference policy investigates the files exactly through the public
+tools, then submits findings with evidence.
 """
 
 from __future__ import annotations
@@ -18,7 +18,7 @@ if str(ROOT) not in sys.path:
 
 from letro.factory import env_from_episode  # noqa: E402
 from letro.generator import load_episode  # noqa: E402
-from letro.policies import ReconciliationPolicy  # noqa: E402
+from letro.policies import ThoroughPolicy  # noqa: E402
 from letro.trajectory import TrajectoryRecorder, run_episode  # noqa: E402
 
 
@@ -43,7 +43,7 @@ def _run(episode_id: str) -> None:
     print(f"  steps    {info['steps_remaining']} available")
 
     recorder = TrajectoryRecorder()
-    result = run_episode(env, ReconciliationPolicy(), recorder=recorder, evaluator=evaluator)
+    result = run_episode(env, ThoroughPolicy(), recorder=recorder, evaluator=evaluator)
     metrics = evaluator.result()
     actions = Counter(
         "submit" if entry["action"].get("type") == "submit" else entry["action"].get("type")
