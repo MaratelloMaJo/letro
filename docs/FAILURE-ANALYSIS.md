@@ -92,6 +92,22 @@ Fixed by normalising CRLF to LF before hashing in both `scripts/build_episodes.p
 and `letro/verify.py`, with a regression test that a CRLF copy has the same digest.
 The clean archive now passes 100.00 on a fresh extraction.
 
+## 2.1 Bugs found in the hardening pass
+
+- **Lazy environment could not build an episode.** `AuditEnv()` imported a factory
+  helper that did not exist, so a jury-style `AuditEnv(); reset(seed, config)` failed
+  immediately. The factory now exposes one `_build` path used by the lazy env, and the
+  verifier exercises both construction styles.
+- **Hidden UI panels were visible.** CSS `display` rules overrode the HTML `hidden`
+  attribute, so the clean-company badge and the empty result panel appeared before a
+  run. A global `[hidden]` rule fixed it.
+- **Finding rows collapsed to one word per line.** The grid placed each finding's
+  children in the 26px counter column. The content is now a single grid child, and the
+  list has a bounded scroll area instead of stretching the page to 10,000 pixels.
+- **The body-limit test corrupted the connection.** A client that sent a 64 KB body
+  made the server's error path race a closed socket. The test now sends only an
+  oversized `Content-Length`, which exercises the same guard without a body.
+
 ## 3. Tests that guard the failure modes
 
 - Clean seeds: 30 generated clean episodes, zero audit issues.
@@ -109,9 +125,17 @@ The clean archive now passes 100.00 on a fresh extraction.
   reconciliation answers preserved.
 - Leaks: forbidden-key scan over observations and info, recorder rejection, exact
   seven-field trajectory schema.
+- Lazy integration: zero-argument `AuditEnv`, `LetroEnv` in eval mode, a step before
+  reset, and the five presets inside the row/document/issue limits.
+- Workbench: health, episode list, summary without truth keys, pagination, record
+  lookup, policy run, unknown policy, unknown episode, path traversal and body limit.
+- Fuzz: 500 episodes across default, hard, hard_composite, clean and wide, with
+  balance, truth reproduction, evidence resolution and permutation checks.
+- Jury: 20 hidden-style seeds, four adapters, 20 permutations and 5 exact replays.
 
-The suite has 79 tests and passes in about 3 seconds on the development machine. The
-verifier's 80 technical checks all pass.
+The suite has 100 tests and passes in about 5.5 seconds on the development machine.
+The verifier's 85 technical checks all pass, the 500-episode fuzz has zero failures,
+and the 20-episode jury run passes every check.
 
 ## 4. Residual risks
 
@@ -138,3 +162,9 @@ verifier's 80 technical checks all pass.
   change the FP/FN boundary; the policy file and README document the choice.
 - **No trained model.** The project measures the environment and the matcher. It does
   not claim a trained agent or a real audit capability.
+- **The CI workflow is configuration, not a green run here.** `.github/workflows/ci.yml`
+  runs the suite, verifier, jury and fuzz on GitHub-hosted Python 3.11, but this
+  machine cannot execute GitHub Actions. The local commands it calls were run directly.
+- **The workbench is a local demo.** It has no authentication, binds loopback by
+  default and serves only labelled episodes. It must not be exposed as a public service.
+

@@ -1,0 +1,31 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Unit and integration tests
+        run: python -m unittest discover -s tests -q
+      - name: One-command verifier
+        run: python -m letro.verify
+      - name: Jury harness
+        run: python -m letro.jury
+      - name: Fuzz smoke
+        run: python -m letro.fuzz --quick
+
+  container:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build image
+        run: docker build -t letro:ci .
+      - name: Run verifier in the image
+        run: docker run --rm letro:ci

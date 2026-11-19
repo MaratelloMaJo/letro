@@ -1,0 +1,40 @@
+{
+  "generated_at": "2026-11-19",
+  "tests": 100,
+  "verifier": {
+    "total": 100.0,
+    "contract_checks": 24,
+    "data_checks": 21,
+    "reward_checks": 20,
+    "reproducibility_checks": 20,
+    "engineering_points": 10
+  },
+  "fuzz": {
+    "seeds": 100,
+    "presets": ["default", "hard", "hard_composite", "clean", "wide"],
+    "episodes": 500,
+    "failures": 0
+  },
+  "jury": {
+    "episodes": 20,
+    "oracle_perfect": 20,
+    "permutations_preserved": 20,
+    "exact_replays": 5,
+    "failures": 0
+  },
+  "workbench": {
+    "transport": "stdlib http.server",
+    "bind": "127.0.0.1:8000",
+    "read_only": true,
+    "serves_truth": false
+  },
+  "docker": {
+    "image": "letro:1.0.0",
+    "base": "python:3.11-slim",
+    "verifier": "100.00 PASS",
+    "python": "3.11.18",
+    "ui_health": "ok"
+  },
+  "interpreters": ["3.11.9", "3.14.6"]
+}
+

@@ -14,4 +14,6 @@ RUN chown -R letro:letro /app
 
 USER letro
 
+EXPOSE 8000
+
 CMD ["python", "-m", "letro.verify"]

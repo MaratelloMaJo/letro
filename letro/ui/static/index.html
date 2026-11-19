@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LETRO audit workbench</title>
+  <meta name="description" content="A read-only workbench for the LETRO financial-audit environment.">
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="/static/app.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#workbench">Skip to the workbench</a>
+
+  <div class="shell">
+    <aside class="rail" aria-label="Episode register">
+      <div class="brand">
+        <span class="brand-mark">LETRO</span>
+        <span class="brand-line">Ledger evidence and traceable reward oracle</span>
+      </div>
+
+      <div class="register-head">
+        <h2>Episode register</h2>
+        <span class="register-count" id="register-count">loading</span>
+      </div>
+
+      <div class="filter">
+        <label for="filter">Filter by id or split</label>
+        <input id="filter" type="search" autocomplete="off" spellcheck="false" placeholder="ep- or train">
+      </div>
+
+      <div class="register" id="register" aria-live="polite"></div>
+
+      <div class="rail-foot">
+        <p>Read-only. Labelled train and dev episodes only. Closed truth is never served.</p>
+        <p class="rail-meta">REC Genesis 2026 · FinTech</p>
+      </div>
+    </aside>
+
+    <main class="page" id="workbench">
+      <header class="page-head">
+        <div>
+          <p class="kicker">Audit workbench</p>
+          <h1>Every posting leaves a trace.</h1>
+          <p class="lede">One company, one period. Read the postings, name the discrepancy, show the evidence.</p>
+        </div>
+        <div class="head-note">
+          <span class="head-note-label">Reward</span>
+          <code>clip(2·F1 − 1 − 0.002·steps, −1, 1)</code>
+        </div>
+      </header>
+
+      <section class="empty" id="empty" aria-live="polite">
+        <div class="empty-rule"></div>
+        <p class="empty-title">Select an episode from the register.</p>
+        <p class="empty-body">The workbench loads the open records, runs one policy adapter and reports the evaluator's terminal metrics. No truth file is read by the page.</p>
+      </section>
+
+      <section class="work" id="work" hidden>
+        <div class="episode-head">
+          <div>
+            <div class="episode-id-row">
+              <h2 id="episode-id">—</h2>
+              <span class="split" id="split">—</span>
+              <span class="clean-flag" id="clean-flag" hidden>clean company</span>
+            </div>
+            <p class="episode-meta" id="episode-meta">—</p>
+          </div>
+          <dl class="counts" id="counts">
+            <div><dt>Ledger rows</dt><dd id="count-ledger">—</dd></div>
+            <div><dt>Documents</dt><dd id="count-documents">—</dd></div>
+            <div><dt>Declared issues</dt><dd id="count-issues">—</dd></div>
+          </dl>
+        </div>
+
+        <div class="controls">
+          <div class="field">
+            <label for="policy">Policy adapter</label>
+            <select id="policy">
+              <option value="reconciliation">Reconciliation — naive baseline</option>
+              <option value="thorough">Thorough — exact reference</option>
+              <option value="random_explorer">Random explorer — fixed seed</option>
+              <option value="mark_all">Mark all — attack</option>
+            </select>
+          </div>
+          <button class="run" id="run" type="button">Run audit</button>
+          <p class="control-note" id="control-note">Investigation reward is zero; only the terminal submission is scored.</p>
+        </div>
+
+        <div class="run-error" id="run-error" role="alert" hidden></div>
+
+        <div class="result" id="result" hidden>
+          <div class="stamp" id="stamp" aria-live="polite">
+            <span class="stamp-word" id="stamp-word">cleared</span>
+            <span class="stamp-sub" id="stamp-sub">terminal submission</span>
+          </div>
+          <dl class="scores" id="scores">
+            <div class="score score-f1"><dt>F1</dt><dd id="score-f1">—</dd></div>
+            <div><dt>Precision</dt><dd id="score-p">—</dd></div>
+            <div><dt>Recall</dt><dd id="score-r">—</dd></div>
+            <div><dt>Reward</dt><dd id="score-reward">—</dd></div>
+            <div><dt>Steps</dt><dd id="score-steps">—</dd></div>
+            <div><dt>Elapsed</dt><dd id="score-time">—</dd></div>
+          </dl>
+        </div>
+
+        <div class="split-panels">
+          <section class="findings" aria-labelledby="findings-title">
+            <div class="section-head">
+              <h3 id="findings-title">Submitted findings</h3>
+              <span class="section-note" id="findings-note">—</span>
+            </div>
+            <ol class="finding-list" id="finding-list"></ol>
+            <p class="finding-empty" id="finding-empty" hidden>No findings were submitted. On a clean company that is the correct answer; on an erroneous one it is a miss.</p>
+          </section>
+
+          <aside class="method" aria-labelledby="method-title">
+            <div class="section-head">
+              <h3 id="method-title">How to read this</h3>
+            </div>
+            <p>The naive baseline flags every invoice with an open balance. Legitimately open invoices become false accusations, which is why it is not a perfect baseline.</p>
+            <p>The thorough adapter mirrors the reference audit and is an upper bound, not the scored baseline. The oracle runs only inside the evaluator.</p>
+            <details>
+              <summary>Declared issue types</summary>
+              <p class="issue-types" id="issue-types">—</p>
+            </details>
+          </aside>
+        </div>
+
+        <section class="journal" aria-labelledby="journal-title">
+          <div class="section-head journal-head">
+            <h3 id="journal-title">Open records</h3>
+            <div class="tabs" role="tablist" aria-label="Record table">
+              <button type="button" role="tab" aria-selected="true" data-table="ledger">Ledger</button>
+              <button type="button" role="tab" aria-selected="false" data-table="invoices">Invoices</button>
+              <button type="button" role="tab" aria-selected="false" data-table="payments">Payments</button>
+              <button type="button" role="tab" aria-selected="false" data-table="fx">FX</button>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table id="records">
+              <thead id="records-head"></thead>
+              <tbody id="records-body"></tbody>
+            </table>
+          </div>
+          <div class="pager">
+            <span id="pager-label">—</span>
+            <div class="pager-buttons">
+              <button type="button" id="prev" disabled>Previous</button>
+              <button type="button" id="next" disabled>Next</button>
+            </div>
+          </div>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <aside class="drawer" id="drawer" aria-label="Record detail" hidden>
+    <div class="drawer-head">
+      <h2 id="drawer-title">Record</h2>
+      <button type="button" id="drawer-close" aria-label="Close record detail">Close</button>
+    </div>
+    <div class="drawer-body" id="drawer-body"></div>
+  </aside>
+
+  <noscript>
+    <p class="noscript">The workbench needs JavaScript. The environment itself runs without a browser: <code>python -m letro.verify</code>.</p>
+  </noscript>
+</body>
+</html>

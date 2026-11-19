@@ -9,6 +9,24 @@ from .evaluator import Evaluator
 from .generator import Episode, generate_episode
 
 
+def _build(
+    seed: int, config: dict[str, Any] | None = None, mode: str = "train"
+) -> tuple[Episode, Evaluator, Any]:
+    """Build an episode, its evaluator and the finalize closure.
+
+    The environment only ever receives the closure; truth stays with the
+    evaluator. This is the single place a lazy environment builds an episode.
+    """
+    episode = generate_episode(seed, config)
+    evaluator = Evaluator(episode)
+    expose = mode == "train"
+
+    def finalize(payload: Any, inspection_steps: int) -> dict[str, Any]:
+        return evaluator.score(payload, inspection_steps, expose=expose)
+
+    return episode, evaluator, finalize
+
+
 def env_from_episode(
     episode: Episode, mode: str = "train"
 ) -> tuple[AuditEnv, Evaluator]:

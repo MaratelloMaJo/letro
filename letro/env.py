@@ -1,4 +1,11 @@
-"""Gymnasium-style audit environment with a strict read-only tool surface."""
+"""Gymnasium-style audit environment with a strict read-only tool surface.
+
+Two construction styles are supported:
+
+- ``AuditEnv(open_data)`` for a pre-built episode, used by the factory and tests.
+- ``AuditEnv()`` / ``LetroEnv()`` for a lazy environment that builds an episode
+  on the first ``reset``. This is the shape a jury harness expects.
+"""
 
 from __future__ import annotations
 
@@ -26,19 +33,29 @@ class AuditEnv:
 
     def __init__(
         self,
-        open_data: dict[str, Any],
+        open_data: dict[str, Any] | None = None,
         finalize: Finalize | None = None,
         provider: Provider | None = None,
         expose_reward: bool = True,
         seed: int = 0,
     ):
-        self._store = OpenStore(open_data)
+        self._store = OpenStore(open_data) if open_data is not None else None
+        self._lazy = open_data is None
         self._finalize = finalize
         self._provider = provider
         self._expose_reward = expose_reward
         self._seed = seed
-        self._episode_id = open_data["manifest"]["episode_id"]
+        self._episode_id = (
+            open_data["manifest"]["episode_id"] if open_data is not None else None
+        )
         self._reset_state()
+
+    def _build_episode(
+        self, seed: int, config: dict[str, Any] | None
+    ) -> tuple[Any, Any, Finalize]:
+        from .factory import _build
+
+        return _build(seed, config, "train")
 
     def _reset_state(self) -> None:
         self._steps = 0
@@ -47,19 +64,27 @@ class AuditEnv:
         self._truncated = False
         self._submitted = False
         self._first = True
+        self._started = False
         self._last_result: dict[str, Any] | None = None
 
     def reset(
         self, seed: int | None = None, config: dict[str, Any] | None = None
     ) -> tuple[dict[str, Any], dict[str, Any]]:
-        if self._provider is not None and (seed is not None or config is not None):
-            use_seed = self._seed if seed is None else seed
+        use_seed = self._seed if seed is None else seed
+        if self._store is None or (self._lazy and (seed is not None or config is not None)):
+            episode, _evaluator, finalize = self._build_episode(use_seed, config)
+            self._store = OpenStore(episode.open_data())
+            self._finalize = finalize
+            self._episode_id = episode.manifest["episode_id"]
+            self._seed = use_seed
+        elif self._provider is not None and (seed is not None or config is not None):
             open_data, finalize = self._provider(use_seed, config)
             self._store = OpenStore(open_data)
             self._finalize = finalize
             self._episode_id = open_data["manifest"]["episode_id"]
             self._seed = use_seed
         self._reset_state()
+        self._started = True
         return self._observation(), self._info()
 
     def _info(self, **extra: Any) -> dict[str, Any]:
@@ -120,6 +145,8 @@ class AuditEnv:
     def step(
         self, action: Any
     ) -> tuple[dict[str, Any], float, bool, bool, dict[str, Any]]:
+        if not self._started:
+            self.reset()
         if self._done:
             return (
                 self._observation(),
@@ -149,7 +176,9 @@ class AuditEnv:
                 "ok": not invalid,
                 "error": "invalid findings structure" if invalid else None,
             }
-            reward = float(result.get("reward", 0.0)) if self._expose_reward else 0.0
+            reward = (
+                float(result.get("reward", 0.0)) if self._expose_reward else 0.0
+            )
             info = self._info(submitted=True)
             if invalid:
                 info["error"] = "invalid findings structure"
@@ -188,4 +217,34 @@ class AuditEnv:
         self.close()
 
 
-__all__ = ["AuditEnv", "TASK"]
+class LetroEnv(AuditEnv):
+    """Lazy env: ``LetroEnv().reset(seed=..., config=...)`` builds an episode."""
+
+    metadata = {"name": "LETRO", "render_modes": []}
+
+    def __init__(
+        self,
+        mode: str = "train",
+        seed: int = 0,
+        config: dict[str, Any] | None = None,
+    ):
+        super().__init__(
+            open_data=None,
+            finalize=None,
+            provider=None,
+            expose_reward=(mode == "train"),
+            seed=seed,
+        )
+        self._mode = mode
+        self._config = config
+
+    def _build_episode(
+        self, seed: int, config: dict[str, Any] | None
+    ) -> tuple[Any, Any, Finalize]:
+        from .factory import _build
+
+        use_config = self._config if config is None else config
+        return _build(seed, use_config, self._mode)
+
+
+__all__ = ["AuditEnv", "LetroEnv", "TASK"]

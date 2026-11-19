@@ -160,9 +160,29 @@ record order, which is exactly the kind of overfitting the rubric tests.
   audit and reaches F1 1.000. The gap between them is the measured difficulty, and
   the random, mark-all and oracle adapters bracket the reward from below and above.
 
+## 7.1 Hardening, fuzz and workbench
+
+The environment supports both `AuditEnv(open_data)` and the lazy `AuditEnv()` /
+`LetroEnv()`. The lazy form builds an episode on `reset` through the factory, so a
+harness can call `env = AuditEnv(); env.reset(seed, config)` without constructing a
+generator first. A `step` before `reset` starts the episode, which makes the object
+safe for generic runners.
+
+`letro.presets` adds `hard`, `hard_composite`, `clean` and `wide` configurations.
+`letro.fuzz` checks balance, manifest counts, truth reproduction, evidence
+resolution and permutation stability; the full run covers 500 episodes. `letro.jury`
+runs 20 hidden-style seeds with the four required adapters, 20 ID/order permutations
+and 5 exact replays. `letro.invariants` is an independent reader of the same
+contract, so the fuzz does not inherit the verifier's assumptions.
+
+`letro.ui` is a read-only workbench served by `http.server` on `127.0.0.1:8000`. It
+shows the open records, runs a policy, and displays the evaluator's terminal
+metrics. It never serves `truth.json`, never accepts a filesystem path from a client,
+and is not part of the scored environment.
+
 ## 8. Measured evidence
 
-`python -m letro.verify` runs 80 technical checks and five engineering criteria. On
+`python -m letro.verify` runs 85 technical checks and five engineering criteria. On
 the shipped artefacts all technical checks pass; the engineering score depends on the
 presence of this note, the README, the container, the trajectory log, the failure
 analysis and the limitations section.
@@ -175,6 +195,11 @@ F1 1.000 and reward 1.000. The naive baseline fails on clean books (F1 0.000)
 because it accuses every open invoice, which is exactly the behaviour the reward
 must punish; the reference proves the same episodes are solvable.
 
+The hardening evidence is in `docs/evidence/hardening.json`: 100 unit and integration
+tests, 84 verifier checks, 500 fuzz episodes with zero failures across five presets,
+and a 20-episode jury run with 20/20 oracle and permutation checks and 5/5 exact
+replays. The workbench is a demo surface and is not counted in the score.
+
 ## 9. Limitations
 
 The data is synthetic and the taxonomy has four types. The tolerance is a competition
@@ -184,3 +209,4 @@ no GPU is used; the reward measures answer quality and evidence, not the quality
 professional audit. The environment deliberately has no shell, filesystem or network,
 so it cannot test misuse of those capabilities. See `README.md` and
 `docs/FAILURE-ANALYSIS.md` for the full honest list.
+

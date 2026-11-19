@@ -1,7 +1,7 @@
 """One-command verification for the LETRO environment.
 
 Run ``python -m letro.verify`` from the repository root. The command checks the
-four scored technical criteria with 20 checks each, scores the five engineering
+four scored technical criteria with 20 or more checks each, scores the five engineering
 criteria, prints a table and exits non-zero when anything fails.
 """
 
@@ -662,6 +662,53 @@ def criterion_contract() -> list[Check]:
         return True, "manifest, counts and ISO offsets are consistent"
 
     _run(checks, "manifest_contract", manifest_contract)
+
+    def zero_arg_env():
+        from .env import AuditEnv
+
+        env = AuditEnv()
+        observation, info = env.reset(seed=9103, config={"clean": True})
+        assert observation["manifest"]["episode_id"]
+        assert info["steps_remaining"] == MAX_STEPS
+        return True, "AuditEnv() builds an episode on reset"
+
+    _run(checks, "zero_arg_env", zero_arg_env)
+
+    def lazy_reset_seed():
+        from .env import AuditEnv
+
+        env = AuditEnv()
+        first, _info = env.reset(seed=9104, config={"clean": True})
+        second, _info = env.reset(seed=9105, config={"clean": True})
+        assert first["manifest"]["episode_id"] != second["manifest"]["episode_id"]
+        return True, "a seeded reset on a lazy env rebuilds the episode"
+
+    _run(checks, "lazy_reset_seed", lazy_reset_seed)
+
+    def letro_env():
+        from .env import LetroEnv
+
+        env = LetroEnv(mode="eval")
+        observation, info = env.reset(seed=9103, config={"clean": True})
+        assert observation["manifest"]["episode_id"]
+        assert info["steps_remaining"] == MAX_STEPS
+        return True, "LetroEnv() builds an episode on reset"
+
+    _run(checks, "letro_env", letro_env)
+
+    def step_before_reset():
+        from .env import LetroEnv
+
+        env = LetroEnv()
+        observation, reward, terminated, truncated, _info = env.step(
+            {"type": "list_records", "table": "ledger", "limit": 1}
+        )
+        assert reward == 0.0
+        assert not terminated and not truncated
+        assert observation["budget"]["step"] == 1
+        return True, "a step before reset starts the episode"
+
+    _run(checks, "step_before_reset", step_before_reset)
     return checks
 
 
@@ -721,6 +768,14 @@ def criterion_data(dev_entries: list[dict[str, Any]]) -> list[Check]:
             )
 
         _run(checks, f"dev_episode_{entry['episode_id']}", check)
+
+    def fuzz_smoke():
+        from .fuzz import run
+
+        assert run(seeds=5, names=["default"], permute=True, quiet=True) == 0
+        return True, "5 extra seeds pass invariants and permutation"
+
+    _run(checks, "fuzz_smoke", fuzz_smoke)
     return checks
 
 

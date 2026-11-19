@@ -20,6 +20,12 @@ dependencies = []
 
 [project.scripts]
 letro-verify = "letro.verify:main"
+letro-jury = "letro.jury:main"
+letro-fuzz = "letro.fuzz:main"
+letro-ui = "letro.ui.server:main"
 
 [tool.setuptools.packages.find]
 include = ["letro*"]
+
+[tool.setuptools.package-data]
+"letro.ui" = ["static/*"]

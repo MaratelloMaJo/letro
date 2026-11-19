@@ -33,11 +33,53 @@ Run the unit tests separately:
 python -m unittest discover -s tests -v
 ```
 
+## Python API
+
+The environment has two construction styles. The lazy style is the one a jury
+harness usually expects:
+
+```python
+from letro.env import AuditEnv, LetroEnv
+from letro.presets import preset
+
+env = AuditEnv()                       # or LetroEnv(mode="eval")
+observation, info = env.reset(seed=4242, config=preset("clean"))
+observation, reward, terminated, truncated, info = env.step(
+    {"type": "list_records", "table": "ledger", "limit": 10}
+)
+```
+
+`reset` returns `(observation, info)`; `step` returns
+`(observation, reward, terminated, truncated, info)`. A step before `reset` starts
+the episode. `LetroEnv(mode="eval")` hides the terminal reward and diagnostics from
+the policy while the evaluator keeps them. The environment never receives truth or
+the seed: it holds only open data and a `finalize` closure owned by the runner.
+
+## Jury harness, fuzz and workbench
+
+```console
+python -m letro.jury
+python -m letro.fuzz --quick
+python -m letro.fuzz --seeds 100
+python -m letro.ui
+```
+
+`letro.jury` runs 20 unseen seeds with the four required adapters, 20 ID/order
+permutations and 5 exact replays, checks observation isolation and exits non-zero on
+failure. `letro.fuzz` checks 5 presets (default, hard, hard_composite, clean, wide)
+for balance, truth reproduction, evidence resolution and permutation stability;
+`--seeds 100` covers 500 episodes. `letro.ui` serves a read-only workbench at
+http://127.0.0.1:8000 for the labelled train/dev episodes. The workbench is a demo
+surface, not part of the scored environment; it never serves `truth.json`.
+
+![LETRO audit workbench](docs/ui.png)
+
 ## Container
 
 ```console
 docker build -t letro:1.0.0 .
 docker run --rm letro:1.0.0
+docker run --rm -p 8000:8000 letro:1.0.0 python -m letro.ui --host 0.0.0.0
 ```
 
 The image uses `python:3.11-slim`, installs no packages, runs as an unprivileged
@@ -201,17 +243,27 @@ invoice, payment, ledger row and document id is renamed, all tables are shuffled
 and truth is rebuilt from the transformed open files. The oracle answer and reward
 must be preserved, which they are for all 20 paired checks.
 
+## Continuous integration and runbook
+
+`.github/workflows/ci.yml` runs the tests, the verifier, the jury harness and the
+quick fuzz on Python 3.11, then builds and runs the container. `docs/RUNBOOK.md`
+covers start/stop, common failures, the container and the hidden-seed check.
+
 ## Layout
 
 ```text
 letro/                 environment, tools, matcher, reward, evaluator, verifier
 letro/generator/       clean company builder, error injection, reference audit
 letro/policies/        four baseline adapters plus the thorough reference
+letro/ui/              read-only local workbench (stdlib http.server)
+letro/jury.py          hidden-style integration harness
+letro/fuzz.py          500-episode invariant and permutation sweep
+letro/presets.py       default, hard, hard_composite, clean, wide
 scripts/               episode build, trajectory recording, policy metrics, demo
 episodes/train|dev/    10 + 10 open episodes with closed labels
 trajectories/          recorded runs and summary
-tests/                 79 unit and integration tests
-docs/                  design, failure analysis, readiness, evidence
+tests/                 100 unit and integration tests
+docs/                  design, failure analysis, readiness, runbook, evidence
 ```
 
 ## Limitations
@@ -231,7 +283,12 @@ docs/                  design, failure analysis, readiness, evidence
 - The environment exposes a narrow read-only interface by design. It cannot test
   tool misuse that requires filesystem, shell or network access, because those
   capabilities do not exist here.
+- The workbench is a demo surface. It is read-only, serves only labelled train/dev
+  episodes, and earns no competition points; it is not a hosted product.
+- The 500-episode fuzz covers one generator family and five presets. It is strong
+  evidence against contract drift, not proof of real-world generality.
 
 ## License
 
 MIT. See `LICENSE`.
+
