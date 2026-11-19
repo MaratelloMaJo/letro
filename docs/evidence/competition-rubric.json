@@ -1,0 +1,41 @@
+{
+  "name": "rec-genesis-letro-100",
+  "bands": [
+    {"min": 85, "label": "Finalist"},
+    {"min": 70, "label": "Conditional"},
+    {"min": 50, "label": "Not ready"},
+    {"min": 0, "label": "Rejected"}
+  ],
+  "criteria": [
+    {
+      "id": "c1.contract",
+      "phase": "P1",
+      "weight": 25,
+      "criterion": "Contract and isolation: reset/step shapes, schemas, limits, completion, invalid input, no truth leaks (20 fixed checks)"
+    },
+    {
+      "id": "c2.data",
+      "phase": "P1",
+      "weight": 25,
+      "criterion": "Data and truth: books balanced before injection, declared discrepancy after, independently sufficient evidence (20 closed episodes)"
+    },
+    {
+      "id": "c3.reward",
+      "phase": "P2",
+      "weight": 25,
+      "criterion": "Reward reliability: matching, clean cases, false positives, duplicates, cost, adversarial answers (20 checks)"
+    },
+    {
+      "id": "c4.repro",
+      "phase": "P2",
+      "weight": 15,
+      "criterion": "Reproducibility and generalization: exact replay, id and order permutation preserve oracle answer and reward (20 paired checks)"
+    },
+    {
+      "id": "c5.engineering",
+      "phase": "P4",
+      "weight": 10,
+      "criterion": "Engineering and explanation: one-command launch, config versions, trajectory logs, measured failure analysis, honest limitations (5 x 0/1/2)"
+    }
+  ]
+}

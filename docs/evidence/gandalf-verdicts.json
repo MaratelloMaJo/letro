@@ -1,0 +1,44 @@
+{
+  "verdicts": [
+    {
+      "id": "c1.contract",
+      "met": true,
+      "reasoning": "All checks pass.",
+      "evidence": [
+        "python -m letro.verify"
+      ]
+    },
+    {
+      "id": "c2.data",
+      "met": true,
+      "reasoning": "All checks pass.",
+      "evidence": [
+        "python -m letro.verify"
+      ]
+    },
+    {
+      "id": "c3.reward",
+      "met": true,
+      "reasoning": "All checks pass.",
+      "evidence": [
+        "python -m letro.verify"
+      ]
+    },
+    {
+      "id": "c4.repro",
+      "met": true,
+      "reasoning": "All checks pass.",
+      "evidence": [
+        "python -m letro.verify"
+      ]
+    },
+    {
+      "id": "c5.engineering",
+      "met": true,
+      "reasoning": "All checks pass.",
+      "evidence": [
+        "python -m letro.verify"
+      ]
+    }
+  ]
+}

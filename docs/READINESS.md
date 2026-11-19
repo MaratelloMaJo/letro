@@ -146,7 +146,15 @@ No critical or high findings. Low-severity observations:
 - A qualified accountant if the claim is extended beyond a synthetic competition
   artefact.
 
-## 11. Not verified
+## 11. Gandalf-mode audit
+
+The Gandalf CLI could not run: it needs `uv`, `tmux` and an LLM API key, and none
+is installed here. Status: UNKNOWN. As a substitute the published competition
+rubric was frozen and scored with the skill's standard-library scorer over
+evidence-backed verdicts. Result: 100.0/100.0, band Finalist, exit 0. The score
+table and the two input files are in `docs/evidence/`.
+
+## 12. Not verified
 
 - Real audit suitability: the data is synthetic and no accountant reviewed it.
 - Out-of-family generalization: hidden seeds share the generator family.
