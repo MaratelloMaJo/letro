@@ -210,7 +210,7 @@ letro/policies/        four baseline adapters plus the thorough reference
 scripts/               episode build, trajectory recording, policy metrics, demo
 episodes/train|dev/    10 + 10 open episodes with closed labels
 trajectories/          recorded runs and summary
-tests/                 78 unit and integration tests
+tests/                 79 unit and integration tests
 docs/                  design, failure analysis, readiness, evidence
 ```
 

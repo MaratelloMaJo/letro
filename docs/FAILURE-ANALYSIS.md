@@ -83,6 +83,15 @@ made a legitimate partial payment look fully paid. Fixed by applying the remaind
 only when the parts sum to the invoice total; otherwise the allocation is
 proportional. This removed a class of false negatives from clean books.
 
+### 2.6 A clean Windows checkout failed the open-file digest
+
+The recorded SHA-256 in `episodes/index.json` was computed over the LF files the
+builder writes. A fresh Windows checkout converts them to CRLF, so the clean-copy
+verifier reported `open files do not match the recorded digest` for every episode.
+Fixed by normalising CRLF to LF before hashing in both `scripts/build_episodes.py`
+and `letro/verify.py`, with a regression test that a CRLF copy has the same digest.
+The clean archive now passes 100.00 on a fresh extraction.
+
 ## 3. Tests that guard the failure modes
 
 - Clean seeds: 30 generated clean episodes, zero audit issues.
@@ -101,7 +110,7 @@ proportional. This removed a class of false negatives from clean books.
 - Leaks: forbidden-key scan over observations and info, recorder rejection, exact
   seven-field trajectory schema.
 
-The suite has 78 tests and passes in about 3 seconds on the development machine. The
+The suite has 79 tests and passes in about 3 seconds on the development machine. The
 verifier's 80 technical checks all pass.
 
 ## 4. Residual risks
