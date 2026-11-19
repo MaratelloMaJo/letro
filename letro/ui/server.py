@@ -287,6 +287,7 @@ class Handler(BaseHTTPRequestHandler):
         try:
             body = self._body()
         except ValueError as exc:
+            self.close_connection = True
             self._json(HTTPStatus.BAD_REQUEST, {"error": str(exc)})
             return
         episode_id = body.get("episode_id")
