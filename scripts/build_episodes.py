@@ -67,7 +67,7 @@ def digest_directory(directory: Path) -> str:
     digest = hashlib.sha256()
     for name in OPEN_FILES:
         digest.update(name.encode("utf-8"))
-        digest.update((directory / name).read_bytes())
+        digest.update((directory / name).read_bytes().replace(b"\r\n", b"\n"))
     return digest.hexdigest()
 
 

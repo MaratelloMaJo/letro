@@ -330,7 +330,8 @@ def _digest(directory: Path) -> str:
     digest = hashlib.sha256()
     for name in OPEN_FILES:
         digest.update(name.encode("utf-8"))
-        digest.update((directory / name).read_bytes())
+        # The digest attests content, not the checkout's line-ending style.
+        digest.update((directory / name).read_bytes().replace(b"\r\n", b"\n"))
     return digest.hexdigest()
 
 
