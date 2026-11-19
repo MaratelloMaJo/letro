@@ -8,7 +8,7 @@ file or measured output is not a PASS.
 ## 1. Verdict
 
 **READY for hackathon submission — 100/100 on the supplied competition rubric.**
-All 80 technical checks and all five engineering criteria pass from a clean copy. The
+All 85 technical checks and all five engineering criteria pass from a clean copy. The
 package is not a production SaaS and does not claim to be one: there is no deployed
 service, authentication, database or on-call rotation, because the brief asks for an
 offline, reproducible RL environment.
@@ -34,7 +34,7 @@ offline, reproducible RL environment.
 | A clean copy works without local state | archived `HEAD` with `git archive`, extracted to `%TEMP%\letro-clean-final2`, ran the verifier → 100.00, exit 0; a CRLF checkout no longer breaks the digest | PASS |
 | Tests pass | `python -m unittest discover -s tests -q` → 100 tests, 0 failures, 5.5 s (also 3.11.9) | PASS |
 | Truth cannot leak into observations | `letro/env.py` holds only open data + a `finalize` callback; `letro/evaluator.py` owns truth; `letro/trajectory.py` scans observations for forbidden keys; `tests/test_leaks.py` | PASS |
-| Every truth issue is provable from open files | `letro/generator/audit.py` reads only open records; generation raises on count mismatch; verifier data criterion 20/20; evidence ids resolve in `tests/test_generator.py` | PASS |
+| Every truth issue is provable from open files | `letro/generator/audit.py` reads only open records; generation raises on count mismatch; verifier data criterion 21/21; evidence ids resolve in `tests/test_generator.py` | PASS |
 | Reward resists mark-all and persuasive text | one-to-one matching, canonical ids, evidence sets; mark_all F1 0.000, reward -1.000; `tests/test_attacks.py` | PASS |
 | Determinism and id/order invariance | byte-identical replay; permutation renames and shuffles all ids; 20/20 paired checks; `tests/test_reproducibility.py` | PASS |
 | Trajectories contain no closed truth | 500 records, 40 runs, exact seven fields; validator rejects leaks; `trajectories/summary.json` | PASS |
@@ -43,7 +43,7 @@ offline, reproducible RL environment.
 | Runs on Python 3.11 exactly | `py -3.11 -m unittest discover -s tests -q` → 100 tests OK; `py -3.11 -m letro.verify` → 100.00 PASS | PASS |
 | No secrets in the tree | pattern scan for `sk-…`, `AKIA…`, private keys, passwords, API keys → no matches; working tree and git history | PASS |
 | No network, shell, SQL or filesystem tool | `letro/tools.py` exposes four read-only actions and a restricted AST calculator; no `subprocess`, `socket`, `os.system`, `eval` | PASS |
-| Episodes are within the data contract | 20 episodes, 272–442 ledger rows, 76–112 documents, 0–6 issues; `episodes/index.json`; verifier data 20/20 | PASS |
+| Episodes are within the data contract | 20 episodes, 272–442 ledger rows, 76–112 documents, 0–6 issues; `episodes/index.json`; verifier data 21/21 | PASS |
 
 ## 4. P0–P4 status
 
@@ -99,7 +99,7 @@ readiness.
    Why it kills: an unsolvable issue turns difficulty into a broken answer key.
    What must be in the answer: `reference_audit` reads only open records, generation
    fails when the audit count differs, evidence ids resolve, and the verifier's data
-   criterion is 20/20.
+   criterion is 21/21.
 3. **Can a lazy or adversarial policy farm the reward?**
    Why it kills: a reward that pays for accusations teaches the wrong behaviour.
    What must be in the answer: one-to-one matching, canonical ids, complete evidence
@@ -163,4 +163,5 @@ table and the two input files are in `docs/evidence/`.
   not tested.
 - The container's UI command: the health endpoint was verified inside the image; the
   browser rendering was inspected on the host, not inside the container.
+
 
