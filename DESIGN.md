@@ -142,9 +142,12 @@ record order, which is exactly the kind of overfitting the rubric tests.
 
 - **Truth derived, not authored.** Slightly slower generation, much stronger
   solvability guarantee. The audit is also reused by the reconciliation baseline.
-- **Two allowed evidence sets per issue.** Gives the auditor a reasonable choice
-  (for example, with or without the suspense row) without accepting an incomplete
-  proof.
+- **Two allowed evidence sets per issue where a second complete proof exists.**
+  Gives the auditor a reasonable choice (for example, with or without the suspense
+  row) without accepting an incomplete proof. A duplicate invoice requires the
+  invoice plus every AR and revenue posting for it, because the original posting
+  is what makes the extra one provable; the verifier rejects an evidence set that
+  cannot be re-derived from the open records.
 - **Composites as two issues.** Simpler matching and clearer partial credit than a
   special composite type, at the cost of requiring two findings.
 - **No third-party dependencies.** Makes the container and the offline check trivial;

@@ -131,7 +131,10 @@ and `period_cutoff`. Matching is one-to-one and requires all of:
 - the exact canonical `affected_ids` set;
 - the same currency;
 - the claimed amount within ±1 minor unit of the expected amount;
-- at least one complete allowed evidence set (a superset is accepted).
+- at least one complete allowed evidence set (a superset is accepted). Every
+  shipped evidence set can be re-derived from the open records alone; for a
+  duplicate invoice it must include the invoice and every AR and revenue posting
+  for it, so the extra posting is provable against the original.
 
 Unmatched findings and repeated findings are false positives; missed issues are
 false negatives. Explanations are never scored, so persuasive text cannot change

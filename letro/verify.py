@@ -204,6 +204,71 @@ def _iso(value: str) -> bool:
     return parsed.tzinfo is not None
 
 
+def _evidence_semantics(episode: Any, issue: dict[str, Any]) -> tuple[bool, str]:
+    """An evidence set must let an auditor re-derive the issue without truth."""
+    ledger = {row["row_id"]: row for row in episode.ledger}
+    invoices = {item["invoice_id"]: item for item in episode.invoices}
+    payments = {item["payment_id"]: item for item in episode.payments}
+    start = datetime.fromisoformat(episode.manifest["period_start"])
+    end = datetime.fromisoformat(episode.manifest["period_end"])
+    kind = issue["type"]
+
+    for values in issue.get("allowed_evidence_sets", []):
+        ids = list(values)
+        if kind == "duplicate_invoice":
+            invoice_ids = [value for value in ids if value in invoices]
+            ar_rows = [
+                value
+                for value in ids
+                if value in ledger
+                and ledger[value]["account"] == "1100"
+                and ledger[value]["debit_minor"] > 0
+                and invoice_ids
+                and ledger[value]["invoice_id"] == invoice_ids[0]
+            ]
+            if invoice_ids and len(set(ar_rows)) >= 2:
+                return True, ""
+        elif kind == "payment_allocation_gap":
+            has_payment = any(value in payments for value in ids)
+            has_invoice = any(value in invoices for value in ids)
+            has_ar = any(
+                value in ledger
+                and ledger[value]["account"] == "1100"
+                and ledger[value]["credit_minor"] > 0
+                for value in ids
+            )
+            has_cash = any(
+                value in ledger
+                and ledger[value]["account"] == "1000"
+                and ledger[value]["debit_minor"] > 0
+                for value in ids
+            )
+            if has_payment and has_invoice and has_ar and has_cash:
+                return True, ""
+        elif kind == "fx_rate_error":
+            has_doc = any(value in invoices or value in payments for value in ids)
+            has_amount = any(
+                value in ledger
+                and (ledger[value]["debit_minor"] or ledger[value]["credit_minor"])
+                for value in ids
+            )
+            if has_doc and has_amount:
+                return True, ""
+        elif kind == "period_cutoff":
+            has_doc = any(value in invoices or value in payments for value in ids)
+            has_outside = False
+            for value in ids:
+                row = ledger.get(value)
+                if row is None:
+                    continue
+                moment = datetime.fromisoformat(row["timestamp"])
+                if not (start <= moment <= end):
+                    has_outside = True
+            if has_doc and has_outside:
+                return True, ""
+    return False, f"{issue['issue_id']} ({kind}) evidence is not independently sufficient"
+
+
 def _episode_check(
     episode: Any,
     *,
@@ -245,6 +310,9 @@ def _episode_check(
             return False, f"{issue['issue_id']} has no allowed evidence set"
         if not any(values and len(values) <= 10 and set(values) <= valid for values in sets):
             return False, f"{issue['issue_id']} evidence does not resolve"
+        ok, detail = _evidence_semantics(episode, issue)
+        if not ok:
+            return False, detail
     for value in [episode.manifest["period_start"], episode.manifest["period_end"]]:
         if not _iso(value):
             return False, "period boundary is not ISO-8601 with an offset"

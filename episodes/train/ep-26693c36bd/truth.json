@@ -13,12 +13,10 @@
       "allowed_evidence_sets": [
         [
           "INV-0037",
+          "LED-000073",
           "LED-000273",
+          "LED-000074",
           "LED-000274"
-        ],
-        [
-          "INV-0037",
-          "LED-000273"
         ]
       ],
       "explanation": "The invoice is posted more than once; the extra posting inflates receivables and revenue.",

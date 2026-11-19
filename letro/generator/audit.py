@@ -115,20 +115,27 @@ def reference_audit(episode: Episode) -> list[dict[str, Any]]:
             continue
         expected = _base(episode, invoice)
         extra_rows = ar_rows[1:]
+        revenue_all = [
+            row
+            for row in episode.ledger
+            if row["invoice_id"] == invoice_id
+            and row["account"] == REVENUE
+            and row["credit_minor"] > 0
+        ]
+        revenue_all.sort(key=lambda row: (row["timestamp"], row["row_id"]))
+        full_evidence = (
+            [invoice_id]
+            + [row["row_id"] for row in ar_rows]
+            + [row["row_id"] for row in revenue_all]
+        )
         for extra in extra_rows:
             revenue_rows = [
                 row
-                for row in episode.ledger
-                if row["invoice_id"] == invoice_id
-                and row["account"] == REVENUE
-                and row["credit_minor"] > 0
-                and row["timestamp"] == extra["timestamp"]
+                for row in revenue_all
+                if row["timestamp"] == extra["timestamp"]
                 and row["credit_minor"] == extra["debit_minor"]
             ]
             affected = [invoice_id, extra["row_id"]] + [
-                row["row_id"] for row in revenue_rows
-            ]
-            evidence = [invoice_id, extra["row_id"]] + [
                 row["row_id"] for row in revenue_rows
             ]
             issues.append(
@@ -137,7 +144,7 @@ def reference_audit(episode: Episode) -> list[dict[str, Any]]:
                     affected,
                     extra["debit_minor"],
                     base,
-                    [evidence, [invoice_id, extra["row_id"]]],
+                    [full_evidence],
                     "The invoice is posted more than once; the extra posting "
                     "inflates receivables and revenue.",
                 )

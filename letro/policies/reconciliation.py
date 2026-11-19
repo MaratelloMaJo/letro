@@ -180,14 +180,24 @@ class ReconciliationPolicy(Policy):
             ar_rows.sort(key=lambda row: (row["timestamp"], row["row_id"]))
             if len(ar_rows) <= 1:
                 continue
+            revenue_all = [
+                row
+                for row in ledger
+                if row["invoice_id"] == invoice_id
+                and row["account"] == REVENUE
+                and row["credit_minor"] > 0
+            ]
+            revenue_all.sort(key=lambda row: (row["timestamp"], row["row_id"]))
+            full_evidence = (
+                [invoice_id]
+                + [row["row_id"] for row in ar_rows]
+                + [row["row_id"] for row in revenue_all]
+            )
             for extra in ar_rows[1:]:
                 revenue_rows = [
                     row
-                    for row in ledger
-                    if row["invoice_id"] == invoice_id
-                    and row["account"] == REVENUE
-                    and row["credit_minor"] > 0
-                    and row["timestamp"] == extra["timestamp"]
+                    for row in revenue_all
+                    if row["timestamp"] == extra["timestamp"]
                     and row["credit_minor"] == extra["debit_minor"]
                 ]
                 affected = [invoice_id, extra["row_id"]] + [
@@ -199,7 +209,7 @@ class ReconciliationPolicy(Policy):
                         affected,
                         extra["debit_minor"],
                         base,
-                        [affected, [invoice_id, extra["row_id"]]],
+                        [full_evidence],
                         "The invoice is posted more than once; the extra entry "
                         "inflates receivables and revenue.",
                     )
