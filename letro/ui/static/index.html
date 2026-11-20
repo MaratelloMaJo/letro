@@ -126,6 +126,15 @@
           </aside>
         </div>
 
+        <section class="evidence-chain" id="evidence-chain" aria-labelledby="evidence-title" hidden>
+          <div class="section-head">
+            <h3 id="evidence-title">Evidence chain</h3>
+            <span class="section-note" id="evidence-note">—</span>
+          </div>
+          <p class="proof-note">Resolved open records only. Unknown ids are reported as missing.</p>
+          <div class="evidence-records" id="evidence-records"></div>
+        </section>
+
         <section class="journal" aria-labelledby="journal-title">
           <div class="section-head journal-head">
             <h3 id="journal-title">Open records</h3>
@@ -148,6 +157,62 @@
               <button type="button" id="prev" disabled>Previous</button>
               <button type="button" id="next" disabled>Next</button>
             </div>
+          </div>
+        </section>
+
+        <section class="proof-surfaces" aria-labelledby="proof-title">
+          <div class="section-head proof-head">
+            <h3 id="proof-title">Proof surfaces</h3>
+            <div class="tabs" role="tablist" aria-label="Proof surface">
+              <button type="button" role="tab" aria-selected="true" data-proof="challenge">Challenge</button>
+              <button type="button" role="tab" aria-selected="false" data-proof="leaderboard">Leaderboard</button>
+            </div>
+          </div>
+
+          <div class="proof-panel" id="proof-challenge" role="tabpanel">
+            <p class="proof-note">Paste a findings payload. Scoring returns aggregate metrics and per-finding match booleans only; issue ids and hidden amounts stay closed.</p>
+            <label class="proof-label" for="challenge-input">Findings payload</label>
+            <textarea id="challenge-input" rows="9" spellcheck="false" placeholder='{"episode_id": "ep-…", "findings": []}'></textarea>
+            <div class="proof-actions">
+              <button class="proof-run" id="challenge-run" type="button">Score submission</button>
+              <span class="proof-note" id="challenge-note">Empty findings are a valid clean-book answer.</span>
+            </div>
+            <div class="run-error" id="challenge-error" role="alert" hidden></div>
+            <div class="challenge-result" id="challenge-result" hidden>
+              <dl class="challenge-scores">
+                <div><dt>F1</dt><dd id="challenge-f1">—</dd></div>
+                <div><dt>Precision</dt><dd id="challenge-p">—</dd></div>
+                <div><dt>Recall</dt><dd id="challenge-r">—</dd></div>
+                <div><dt>Reward</dt><dd id="challenge-reward">—</dd></div>
+                <div><dt>TP</dt><dd id="challenge-tp">—</dd></div>
+                <div><dt>FP</dt><dd id="challenge-fp">—</dd></div>
+                <div><dt>FN</dt><dd id="challenge-fn">—</dd></div>
+              </dl>
+              <p class="proof-note" id="challenge-findings">—</p>
+            </div>
+          </div>
+
+          <div class="proof-panel" id="proof-leaderboard" role="tabpanel" hidden>
+            <p class="proof-note">Four public policy rows are run live in eval mode. The oracle row is read from the published evidence file and labelled evaluator-side.</p>
+            <div class="table-wrap">
+              <table id="leaderboard">
+                <thead>
+                  <tr>
+                    <th scope="col">Policy</th>
+                    <th scope="col">Source</th>
+                    <th scope="col">F1</th>
+                    <th scope="col">Precision</th>
+                    <th scope="col">Recall</th>
+                    <th scope="col">Reward</th>
+                    <th scope="col">Steps</th>
+                  </tr>
+                </thead>
+                <tbody id="leaderboard-body">
+                  <tr><td colspan="7" class="dim">Select the leaderboard tab to load it.</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="run-error" id="leaderboard-error" role="alert" hidden></div>
           </div>
         </section>
       </section>

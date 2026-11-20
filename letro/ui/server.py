@@ -23,6 +23,7 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import parse_qs, urlparse
 
+from ..challenge import score_submission
 from ..factory import env_from_episode
 from ..generator import load_episode
 from ..policies import (
@@ -31,6 +32,7 @@ from ..policies import (
     ReconciliationPolicy,
     ThoroughPolicy,
 )
+from ..schema import FindingError
 from ..tools import OpenStore, ToolError
 from ..trajectory import TrajectoryRecorder, run_episode
 
@@ -114,6 +116,76 @@ def _summary(entry: dict[str, Any], episode: Any) -> dict[str, Any]:
             "types": sorted(issue["type"] for issue in truth),
         },
     }
+
+
+def _evidence_table(record_id: str) -> str | None:
+    if record_id.startswith("LED-"):
+        return "ledger"
+    if record_id.startswith(("INV-", "DOC-INV")):
+        return "invoices"
+    if record_id.startswith(("PAY-", "DOC-PAY")):
+        return "payments"
+    return None
+
+
+def _resolve_evidence(
+    store: OpenStore, ids: list[str]
+) -> tuple[list[dict[str, Any]], list[str]]:
+    records: list[dict[str, Any]] = []
+    missing: list[str] = []
+    for record_id in ids:
+        table = _evidence_table(record_id)
+        record = None
+        try:
+            if table in ("invoices", "payments"):
+                record = store.get_record(table, record_id)
+            elif table == "ledger":
+                record = store.get_record("ledger", record_id)
+            else:
+                record = store.get_document(record_id)
+        except ToolError:
+            record = None
+        if record is None:
+            missing.append(record_id)
+        else:
+            records.append(
+                {"id": record_id, "table": table or "documents", "record": record}
+            )
+    return records, missing
+
+
+def _oracle_row() -> dict[str, Any]:
+    path = ROOT / "docs" / "evidence" / "policy-metrics.json"
+    try:
+        evidence = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise RuntimeError("leaderboard evidence is unavailable") from exc
+    oracle = (evidence.get("policies") or {}).get("oracle") or {}
+    return {
+        "policy": "oracle",
+        "label": "evaluator-side",
+        "runs": oracle.get("runs"),
+        "mean_f1": oracle.get("mean_f1"),
+        "mean_reward": oracle.get("mean_reward"),
+        "mean_steps": oracle.get("mean_steps"),
+    }
+
+
+def _leaderboard(entry: dict[str, Any], episode: Any) -> dict[str, Any]:
+    rows: list[dict[str, Any]] = []
+    for name in POLICIES:
+        env, evaluator = env_from_episode(episode, mode="eval")
+        policy = _policy(name, episode, int(entry["seed"]))
+        result = run_episode(
+            env, policy, recorder=TrajectoryRecorder(), evaluator=evaluator
+        )
+        report = evaluator.result()
+        row = {"policy": name, "label": "public", "steps": result.steps}
+        for key in ("tp", "fp", "fn", "precision", "recall", "f1", "reward"):
+            row[key] = report.get(key)
+        rows.append(row)
+    rows.append(_oracle_row())
+    return {"episode_id": entry["episode_id"], "rows": rows}
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -226,6 +298,30 @@ class Handler(BaseHTTPRequestHandler):
             )
             return
 
+        if path == "/api/leaderboard":
+            query = parse_qs(parsed.query)
+            episode_id = (query.get("episode_id") or [""])[0]
+            if not episode_id:
+                self._json(
+                    HTTPStatus.BAD_REQUEST, {"error": "episode_id is required"}
+                )
+                return
+            index = _index()
+            entry = _entry(index, episode_id)
+            if entry is None:
+                self._json(HTTPStatus.NOT_FOUND, {"error": "unknown episode"})
+                return
+            episode = _load(entry)
+            try:
+                payload = _leaderboard(entry, episode)
+            except RuntimeError as exc:
+                self._json(
+                    HTTPStatus.INTERNAL_SERVER_ERROR, {"error": str(exc)}
+                )
+                return
+            self._json(HTTPStatus.OK, payload)
+            return
+
         parts = [item for item in path.split("/") if item]
         if len(parts) >= 4 and parts[0] == "api" and parts[1] == "episodes":
             index = _index()
@@ -275,13 +371,61 @@ class Handler(BaseHTTPRequestHandler):
                     return
                 self._json(HTTPStatus.OK, {"table": table, "record": record})
                 return
+            if len(parts) == 4 and parts[3] == "evidence":
+                query = parse_qs(parsed.query)
+                raw = (query.get("ids") or [""])[0]
+                ids = [item.strip() for item in raw.split(",") if item.strip()]
+                if not ids:
+                    self._json(
+                        HTTPStatus.BAD_REQUEST, {"error": "ids is required"}
+                    )
+                    return
+                if len(ids) > 50 or any(len(item) > 64 for item in ids):
+                    self._json(
+                        HTTPStatus.BAD_REQUEST,
+                        {"error": "at most 50 evidence ids of 64 characters are allowed"},
+                    )
+                    return
+                store = OpenStore(episode.open_data())
+                records, missing = _resolve_evidence(store, ids)
+                self._json(
+                    HTTPStatus.OK,
+                    {
+                        "episode_id": entry["episode_id"],
+                        "records": records,
+                        "missing": missing,
+                    },
+                )
+                return
         self._json(HTTPStatus.NOT_FOUND, {"error": "not found"})
 
     # -- POST -------------------------------------------------------------
 
+    def _challenge(self, body: dict[str, Any]) -> None:
+        episode_id = body.get("episode_id")
+        findings = body.get("findings")
+        if not isinstance(episode_id, str) or not isinstance(findings, dict):
+            self._json(
+                HTTPStatus.BAD_REQUEST,
+                {"error": "episode_id and findings are required"},
+            )
+            return
+        index = _index()
+        entry = _entry(index, episode_id)
+        if entry is None:
+            self._json(HTTPStatus.NOT_FOUND, {"error": "unknown episode"})
+            return
+        episode = _load(entry)
+        try:
+            result = score_submission(episode, findings)
+        except (FindingError, ValueError) as exc:
+            self._json(HTTPStatus.BAD_REQUEST, {"error": str(exc)[:200]})
+            return
+        self._json(HTTPStatus.OK, result)
+
     def do_POST(self) -> None:
         parsed = urlparse(self.path)
-        if parsed.path != "/api/run":
+        if parsed.path not in ("/api/run", "/api/challenge"):
             self._json(HTTPStatus.NOT_FOUND, {"error": "not found"})
             return
         try:
@@ -289,6 +433,9 @@ class Handler(BaseHTTPRequestHandler):
         except ValueError as exc:
             self.close_connection = True
             self._json(HTTPStatus.BAD_REQUEST, {"error": str(exc)})
+            return
+        if parsed.path == "/api/challenge":
+            self._challenge(body)
             return
         episode_id = body.get("episode_id")
         policy_name = body.get("policy", "reconciliation")
