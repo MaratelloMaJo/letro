@@ -24,7 +24,8 @@ SUSPENSE = "9999"
 class ThoroughPolicy(Policy):
     name = "thorough"
 
-    def __init__(self) -> None:
+    def __init__(self, max_pages: int | None = None) -> None:
+        self.max_pages = max_pages
         self.reset({}, {})
 
     def reset(self, observation: dict[str, Any], info: dict[str, Any]) -> None:
@@ -32,6 +33,7 @@ class ThoroughPolicy(Policy):
         self._order = list(TABLES)
         self._table_index = 0
         self._cursor = 0
+        self._pages_in_table = 0
         self._pending_table: str | None = None
         self._episode_id = str(info.get("episode_id", ""))
         self._manifest: dict[str, Any] | None = None
@@ -54,8 +56,11 @@ class ThoroughPolicy(Policy):
                 table = self._pending_table
                 if table in self._tables:
                     self._tables[table].extend(result.get("rows", []))
+                    self._pages_in_table += 1
                     next_cursor = result.get("next_cursor")
-                    if next_cursor is None:
+                    if self.max_pages is not None and self._pages_in_table >= self.max_pages:
+                        self._advance_table()
+                    elif next_cursor is None:
                         self._advance_table()
                     else:
                         self._cursor = int(next_cursor)
@@ -80,6 +85,7 @@ class ThoroughPolicy(Policy):
     def _advance_table(self) -> None:
         self._table_index += 1
         self._cursor = 0
+        self._pages_in_table = 0
         self._pending_table = None
         if self._table_index >= len(self._order):
             self._collected = True
