@@ -3,8 +3,14 @@
 Two construction styles are supported:
 
 - ``AuditEnv(open_data)`` for a pre-built episode, used by the factory and tests.
-- ``AuditEnv()`` / ``LetroEnv()`` for a lazy environment that builds an episode
-  on the first ``reset``. This is the shape a jury harness expects.
+- ``AuditEnv()`` (and ``LetroEnv()`` from :mod:`letro.lazy`) for a lazy
+  environment that builds an episode on the first ``reset``. This is the shape
+  a jury harness expects.
+
+The lazy boundary keeps this module free of ``factory``, ``evaluator``,
+``generator.audit`` and closed truth: ``AuditEnv._build_episode`` imports the
+shared builder from :mod:`letro.lazy`, and ``LetroEnv`` itself lives there and
+is re-exported through ``__getattr__`` so ``letro.env:LetroEnv`` still resolves.
 """
 
 from __future__ import annotations
@@ -52,10 +58,10 @@ class AuditEnv:
 
     def _build_episode(
         self, seed: int, config: dict[str, Any] | None
-    ) -> tuple[Any, Any, Finalize]:
-        from .factory import _build
+    ) -> tuple[dict[str, Any], Any]:
+        from .lazy import build_episode
 
-        return _build(seed, config, "train")
+        return build_episode(seed, config, "train")
 
     def _reset_state(self) -> None:
         self._steps = 0
@@ -72,10 +78,10 @@ class AuditEnv:
     ) -> tuple[dict[str, Any], dict[str, Any]]:
         use_seed = self._seed if seed is None else seed
         if self._store is None or (self._lazy and (seed is not None or config is not None)):
-            episode, _evaluator, finalize = self._build_episode(use_seed, config)
-            self._store = OpenStore(episode.open_data())
+            open_data, finalize = self._build_episode(use_seed, config)
+            self._store = OpenStore(open_data)
             self._finalize = finalize
-            self._episode_id = episode.manifest["episode_id"]
+            self._episode_id = open_data["manifest"]["episode_id"]
             self._seed = use_seed
         elif self._provider is not None and (seed is not None or config is not None):
             open_data, finalize = self._provider(use_seed, config)
@@ -217,34 +223,12 @@ class AuditEnv:
         self.close()
 
 
-class LetroEnv(AuditEnv):
-    """Lazy env: ``LetroEnv().reset(seed=..., config=...)`` builds an episode."""
+def __getattr__(name: str):
+    if name == "LetroEnv":
+        from .lazy import LetroEnv
 
-    metadata = {"name": "LETRO", "render_modes": []}
-
-    def __init__(
-        self,
-        mode: str = "train",
-        seed: int = 0,
-        config: dict[str, Any] | None = None,
-    ):
-        super().__init__(
-            open_data=None,
-            finalize=None,
-            provider=None,
-            expose_reward=(mode == "train"),
-            seed=seed,
-        )
-        self._mode = mode
-        self._config = config
-
-    def _build_episode(
-        self, seed: int, config: dict[str, Any] | None
-    ) -> tuple[Any, Any, Finalize]:
-        from .factory import _build
-
-        use_config = self._config if config is None else config
-        return _build(seed, use_config, self._mode)
+        return LetroEnv
+    raise AttributeError(name)
 
 
 __all__ = ["AuditEnv", "LetroEnv", "TASK"]
