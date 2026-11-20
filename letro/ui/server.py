@@ -25,7 +25,7 @@ from urllib.parse import parse_qs, urlparse
 
 from ..challenge import score_submission
 from ..factory import env_from_episode
-from ..generator import load_episode
+from ..generator import load_episode, load_open_data
 from ..policies import (
     MarkAllPolicy,
     RandomExplorerPolicy,
@@ -306,17 +306,17 @@ class Handler(BaseHTTPRequestHandler):
                     HTTPStatus.BAD_REQUEST, {"error": "episode_id is required"}
                 )
                 return
-            index = _index()
-            entry = _entry(index, episode_id)
-            if entry is None:
-                self._json(HTTPStatus.NOT_FOUND, {"error": "unknown episode"})
-                return
-            episode = _load(entry)
             try:
-                payload = _leaderboard(entry, episode)
-            except RuntimeError as exc:
+                index = _index()
+                entry = _entry(index, episode_id)
+                if entry is None:
+                    self._json(HTTPStatus.NOT_FOUND, {"error": "unknown episode"})
+                    return
+                payload = _leaderboard(entry, _load(entry))
+            except Exception as exc:  # bounded JSON, never a dropped connection
+                message = str(exc).strip()[:200] or "leaderboard is unavailable"
                 self._json(
-                    HTTPStatus.INTERNAL_SERVER_ERROR, {"error": str(exc)}
+                    HTTPStatus.INTERNAL_SERVER_ERROR, {"error": message}
                 )
                 return
             self._json(HTTPStatus.OK, payload)
@@ -328,6 +328,29 @@ class Handler(BaseHTTPRequestHandler):
             entry = _entry(index, parts[2])
             if entry is None:
                 self._json(HTTPStatus.NOT_FOUND, {"error": "unknown episode"})
+                return
+            if len(parts) == 4 and parts[3] == "evidence":
+                query = parse_qs(parsed.query)
+                raw = (query.get("ids") or [""])[0]
+                ids = [item.strip() for item in raw.split(",") if item.strip()]
+                if not ids:
+                    self._json(
+                        HTTPStatus.BAD_REQUEST, {"error": "ids is required"}
+                    )
+                    return
+                if len(ids) > 50 or any(len(item) > 64 for item in ids):
+                    self._json(
+                        HTTPStatus.BAD_REQUEST,
+                        {"error": "at most 50 evidence ids of 64 characters are allowed"},
+                    )
+                    return
+                # Open files only: the evidence surface never reads truth.json.
+                store = OpenStore(load_open_data(ROOT / entry["directory"]))
+                records, missing = _resolve_evidence(store, ids)
+                self._json(
+                    HTTPStatus.OK,
+                    {"records": records, "missing": missing},
+                )
                 return
             episode = _load(entry)
             if len(parts) == 4 and parts[3] == "summary":
@@ -370,32 +393,6 @@ class Handler(BaseHTTPRequestHandler):
                     self._json(HTTPStatus.NOT_FOUND, {"error": str(exc)})
                     return
                 self._json(HTTPStatus.OK, {"table": table, "record": record})
-                return
-            if len(parts) == 4 and parts[3] == "evidence":
-                query = parse_qs(parsed.query)
-                raw = (query.get("ids") or [""])[0]
-                ids = [item.strip() for item in raw.split(",") if item.strip()]
-                if not ids:
-                    self._json(
-                        HTTPStatus.BAD_REQUEST, {"error": "ids is required"}
-                    )
-                    return
-                if len(ids) > 50 or any(len(item) > 64 for item in ids):
-                    self._json(
-                        HTTPStatus.BAD_REQUEST,
-                        {"error": "at most 50 evidence ids of 64 characters are allowed"},
-                    )
-                    return
-                store = OpenStore(episode.open_data())
-                records, missing = _resolve_evidence(store, ids)
-                self._json(
-                    HTTPStatus.OK,
-                    {
-                        "episode_id": entry["episode_id"],
-                        "records": records,
-                        "missing": missing,
-                    },
-                )
                 return
         self._json(HTTPStatus.NOT_FOUND, {"error": "not found"})
 

@@ -72,6 +72,40 @@ for balance, truth reproduction, evidence resolution and permutation stability;
 http://127.0.0.1:8000 for the labelled train/dev episodes. The workbench is a demo
 surface, not part of the scored environment; it never serves `truth.json`.
 
+## Proof pack
+
+The proof pack independently shows that truth is derived from open data, that reward
+cannot be gamed, and that truth cannot leak through the observable surface:
+
+```console
+python -m letro.redteam
+python -m letro.proof
+python -m letro.isolation
+python -m letro.bench
+python -m letro.difficulty
+python -m letro.challenge --episode ep-... --findings submission.json
+```
+
+`letro.redteam` runs 12 adversarial submissions (mark-all, duplicate spam,
+evidence-less, wrong currency, wrong amount, guessed IDs, empty on clean, empty on
+error, timeout, oversized payload, resubmit, duplicate correct) and asserts each stays
+below its published bound; every attack must fail to earn reward. `letro.proof`
+generates a clean episode and a single-error episode for each of the four error types
+and both composites, and asserts the audit difference is exactly one issue (two for a
+composite) with inclusion-minimal, independently recomputed evidence. `letro.isolation`
+plants a canary string in a copied truth/provenance object, runs every action through
+an eval-mode environment, and asserts the canary never appears in observations, info,
+errors or trajectory records; a static AST check forbids `env.py` and `tools.py` from
+importing the evaluator, the audit or the factory. `letro.bench` measures generation,
+reset and 100 steps against the 60-second budget, peak memory against 4 GB, and the
+`git archive` artefact against 1 GB, and checks hash-seed digest stability. `letro.difficulty`
+measures per-error-type precision/recall for random, naive reconciliation, thorough,
+limited-budget and mark-all policies, and counts clean-episode distractors (split
+payments, refunds, recurring identical amounts, legitimately open invoices) that still
+audit to zero. `letro.challenge` scores a submission file and prints only aggregates
+— TP/FP/FN, precision/recall/F1 and reward — with no truth ids, amounts or evidence
+sets.
+
 ![LETRO audit workbench](docs/ui.png)
 
 ## Container
@@ -259,10 +293,16 @@ letro/ui/              read-only local workbench (stdlib http.server)
 letro/jury.py          hidden-style integration harness
 letro/fuzz.py          500-episode invariant and permutation sweep
 letro/presets.py       default, hard, hard_composite, clean, wide
+letro/redteam.py       12 adversarial submissions with published reward bounds
+letro/proof.py         causal truth and evidence minimality proof
+letro/isolation.py     canary sentinel and static boundary check
+letro/bench.py         compute envelope, memory and archive-size measurement
+letro/difficulty.py    per-error-type precision/recall and distractor counts
+letro/challenge.py     sanitized submission scorer (aggregates only, no truth)
 scripts/               episode build, trajectory recording, policy metrics, demo
 episodes/train|dev/    10 + 10 open episodes with closed labels
 trajectories/          recorded runs and summary
-tests/                 100 unit and integration tests
+tests/                 134 unit and integration tests
 docs/                  design, failure analysis, readiness, runbook, evidence
 ```
 

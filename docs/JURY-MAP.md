@@ -30,10 +30,17 @@ the standard library only; the project targets Python 3.11+.
 - `python -m letro.jury` — 20 hidden-style episodes, oracle 20/20,
   permutations 20/20, exact replays 5/5, `RESULT: PASS`.
 
-`letro.proof`, `letro.isolation`, `letro.bench`, `letro.difficulty` and
-`letro.challenge` are the remaining commands of this proof pack. Rows that
-name them are acceptance targets until those modules land; after that, this
-section records their observed output as well.
+``letro.proof`, `letro.isolation`, `letro.bench`, `letro.difficulty` and
+`letro.challenge` are the remaining commands of this proof pack; this section
+records their observed output at the commit that added them.
+
+| Claim | Command | Expected / observed |
+|---|---|---|
+| Causal truth: each error adds exactly its issues | `python -m letro.proof` | 6 PASS rows, exit 0 |
+| Truth cannot leak: canary scan + static boundary | `python -m letro.isolation` | canary: PASS, static boundary: PASS, exit 0 |
+| Compute envelope within 60 s / 4 GB / 1 GB | `python -m letro.bench` | all rows PASS, archive < 1 GB, exit 0 |
+| Measured difficulty gap between baselines | `python -m letro.difficulty` | exit 0, byte-identical rerun |
+| Sanitized public scoring without truth leak | `python -m letro.challenge --episode ... --findings ...` | aggregates only, no truth ids |
 
 ## What is not locally observable
 

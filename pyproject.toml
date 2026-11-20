@@ -23,6 +23,12 @@ letro-verify = "letro.verify:main"
 letro-jury = "letro.jury:main"
 letro-fuzz = "letro.fuzz:main"
 letro-ui = "letro.ui.server:main"
+letro-redteam = "letro.redteam:main"
+letro-proof = "letro.proof:main"
+letro-isolation = "letro.isolation:main"
+letro-bench = "letro.bench:main"
+letro-difficulty = "letro.difficulty:main"
+letro-challenge = "letro.challenge:main"
 
 [tool.setuptools.packages.find]
 include = ["letro*"]

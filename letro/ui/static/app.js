@@ -454,6 +454,8 @@ const runChallenge = async () => {
   state.challengeRunning = true;
   challengeRun.disabled = true;
   challengeRun.textContent = "Scoring…";
+  challengeResult.hidden = true;
+  challengeError.hidden = true;
   try {
     const result = await fetchJSON("/api/challenge", {
       method: "POST",
@@ -476,6 +478,7 @@ const runChallenge = async () => {
     challengeFindings.textContent = `${matched} of ${items.length} findings matched.`;
     challengeNote.textContent = "Aggregate only: no issue ids or hidden amounts.";
   } catch (error) {
+    challengeResult.hidden = true;
     challengeError.textContent = error.message;
     challengeError.hidden = false;
   } finally {
