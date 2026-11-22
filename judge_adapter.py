@@ -19,9 +19,9 @@ from letro.env import TASK
 from letro.factory import env_from_episode
 from letro.generator import generate_episode as _generate_episode
 from letro.generator import load_episode, write_episode
-from letro.matcher import score
+from letro.matcher import available_evidence_ids, score
 from letro.reward import terminal_reward
-from letro.schema import FindingError, validate_findings_payload
+from letro.schema import FindingError, validate_findings_payload_strict
 
 INVALID_SCORE = {
     "tp": None,
@@ -48,23 +48,6 @@ def generate_episode(seed: int, config: dict, output_dir: str) -> None:
     write_episode(episode, output_dir, include_closed=True)
 
 
-def available_evidence_ids(open_data: dict[str, Any]) -> set[str]:
-    """Every ID a policy can reach through get_record/get_document."""
-    ids: set[str] = set()
-    for row in open_data.get("ledger", []):
-        if row.get("row_id"):
-            ids.add(row["row_id"])
-    for invoice in open_data.get("invoices", []):
-        for key in ("doc_id", "invoice_id"):
-            if invoice.get(key):
-                ids.add(invoice[key])
-    for payment in open_data.get("payments", []):
-        for key in ("doc_id", "payment_id"):
-            if payment.get(key):
-                ids.add(payment[key])
-    return ids
-
-
 class JudgeEnv:
     """Canonical environment exposed to a jury policy.
 
@@ -89,7 +72,9 @@ class JudgeEnv:
             if not isinstance(directory, str) or not directory:
                 raise ValueError("closed reset requires episode_dir")
             episode = load_episode(directory, load_closed=True)
-            env, _evaluator = env_from_episode(episode, mode="eval")
+            env, _evaluator = env_from_episode(
+                episode, mode="eval", strict=True
+            )
             self._closed = True
         else:
             team_config = config.get("team_config")
@@ -100,7 +85,9 @@ class JudgeEnv:
                     if key not in ("mode", "episode_dir", "team_config")
                 }
             episode = _generate_episode(seed or 0, team_config)
-            env, _evaluator = env_from_episode(episode, mode="train")
+            env, _evaluator = env_from_episode(
+                episode, mode="train", strict=True
+            )
             self._closed = False
 
         self._env = env
@@ -115,6 +102,28 @@ class JudgeEnv:
     ) -> tuple[dict[str, Any], float, bool, bool, dict[str, Any]]:
         if self._env is None:
             raise RuntimeError("reset must be called before step")
+
+        if (
+            self._deadline is not None
+            and time.monotonic() > self._deadline
+            and not self._env._done
+        ):
+            _observation, reward, _terminated, _truncated, info = (
+                self._env.truncate()
+            )
+            if self._closed:
+                info = {
+                    key: value
+                    for key, value in info.items()
+                    if key not in ("metrics", "reward")
+                }
+            return (
+                self._canonical_observation(),
+                float(reward),
+                True,
+                True,
+                info,
+            )
 
         if self._env._done:
             return (
@@ -220,12 +229,14 @@ class JudgeEnv:
             elif action == "submit":
                 result = {"accepted": True}
         elif last:
+            if last.get("action") == "timeout":
+                code = "time_limit"
+            elif last.get("action") == "submit":
+                code = "invalid_findings"
+            else:
+                code = "tool_error"
             error = {
-                "code": (
-                    "invalid_findings"
-                    if last.get("action") == "submit"
-                    else "tool_error"
-                ),
+                "code": code,
                 "message": str(last.get("error") or "action failed")[:200],
             }
         return {
@@ -270,12 +281,18 @@ def score_episode(
             raise FindingError("findings must be an object")
         payload = dict(findings)
         payload.setdefault("episode_id", episode.manifest["episode_id"])
-        normalized = validate_findings_payload(payload)
+        normalized = validate_findings_payload_strict(payload)
         if normalized["episode_id"] != episode.manifest["episode_id"]:
             raise FindingError("episode_id does not match the episode")
         tolerance = int(episode.policy.get("amount_tolerance_minor", 1))
-        result = score(episode.truth, normalized, tolerance)
-        reward = terminal_reward(result.f1, inspection_steps)
+        result = score(
+            episode.truth,
+            normalized,
+            tolerance,
+            strict=True,
+            available_evidence=available_evidence_ids(episode.open_data()),
+        )
+        reward = terminal_reward(result.f1, inspection_steps, exact=True)
         return {
             "tp": result.tp,
             "fp": result.fp,

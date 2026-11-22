@@ -10,7 +10,10 @@ from .generator import Episode, generate_episode
 
 
 def _build(
-    seed: int, config: dict[str, Any] | None = None, mode: str = "train"
+    seed: int,
+    config: dict[str, Any] | None = None,
+    mode: str = "train",
+    strict: bool = False,
 ) -> tuple[Episode, Evaluator, Any]:
     """Build an episode, its evaluator and the finalize closure.
 
@@ -18,7 +21,7 @@ def _build(
     evaluator. This is the single place a lazy environment builds an episode.
     """
     episode = generate_episode(seed, config)
-    evaluator = Evaluator(episode)
+    evaluator = Evaluator(episode, strict=strict)
     expose = mode == "train"
 
     def finalize(payload: Any, inspection_steps: int) -> dict[str, Any]:
@@ -28,9 +31,9 @@ def _build(
 
 
 def env_from_episode(
-    episode: Episode, mode: str = "train"
+    episode: Episode, mode: str = "train", *, strict: bool = False
 ) -> tuple[AuditEnv, Evaluator]:
-    evaluator = Evaluator(episode)
+    evaluator = Evaluator(episode, strict=strict)
     expose = mode == "train"
 
     def finalize(payload: Any, inspection_steps: int) -> dict[str, Any]:
@@ -45,10 +48,14 @@ def env_from_episode(
 
 
 def make_env(
-    seed: int, config: dict[str, Any] | None = None, mode: str = "train"
+    seed: int,
+    config: dict[str, Any] | None = None,
+    mode: str = "train",
+    *,
+    strict: bool = False,
 ) -> tuple[AuditEnv, Episode, Evaluator]:
     episode = generate_episode(seed, config)
-    evaluator = Evaluator(episode)
+    evaluator = Evaluator(episode, strict=strict)
     expose = mode == "train"
 
     def finalize(payload: Any, inspection_steps: int) -> dict[str, Any]:

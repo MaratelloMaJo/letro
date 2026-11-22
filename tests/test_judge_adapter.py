@@ -190,6 +190,42 @@ class JudgeAdapterTests(unittest.TestCase):
         self.assertFalse(truncated)
         self.assertTrue(info.get("submitted"))
 
+    def test_wall_clock_timeout_truncates_with_empty_findings(self):
+        env = self.make_closed_env()
+        env._deadline = 0.0
+        observation, reward, terminated, truncated, info = env.step(
+            {"name": "list_records", "args": {"table": "ledger", "limit": 1}}
+        )
+        self.assertIsNone(observation["result"])
+        self.assertEqual(observation["error"]["code"], "time_limit")
+        self.assertEqual(reward, 0.0)
+        self.assertTrue(terminated)
+        self.assertTrue(truncated)
+        self.assertTrue(info.get("truncated"))
+
+    def test_adapter_pagination_reaches_all_rows(self):
+        env = self.make_closed_env()
+        seen: list[str] = []
+        cursor = None
+        while True:
+            observation, *_ = env.step(
+                {
+                    "name": "list_records",
+                    "args": {
+                        "table": "ledger",
+                        "limit": 50,
+                        "cursor": cursor,
+                    },
+                }
+            )
+            page = observation["result"]
+            seen.extend(row["row_id"] for row in page["records"])
+            cursor = page["next_cursor"]
+            if cursor is None:
+                break
+        self.assertEqual(len(seen), len(set(seen)))
+        self.assertEqual(len(seen), len(self.episode.ledger))
+
     def test_score_episode_test_1(self):
         result = judge_adapter.score_episode(
             str(self.directory),

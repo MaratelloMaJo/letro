@@ -4,9 +4,13 @@ from __future__ import annotations
 
 from typing import Any
 
-from .matcher import MatchResult, score
+from .matcher import MatchResult, available_evidence_ids, score
 from .reward import terminal_reward
-from .schema import FindingError, validate_findings_payload
+from .schema import (
+    FindingError,
+    validate_findings_payload,
+    validate_findings_payload_strict,
+)
 
 
 class Evaluator:
@@ -17,10 +21,14 @@ class Evaluator:
     truth by construction.
     """
 
-    def __init__(self, episode: Any):
+    def __init__(self, episode: Any, strict: bool = False):
         self._episode = episode
         self._truth = episode.truth
         self._tolerance = int(episode.policy.get("amount_tolerance_minor", 1))
+        self._strict = strict
+        self._available_evidence = (
+            available_evidence_ids(episode.open_data()) if strict else None
+        )
         self.last_result: MatchResult | None = None
         self.last_reward: float | None = None
         self.submissions = 0
@@ -35,6 +43,9 @@ class Evaluator:
         self._episode = episode
         self._truth = episode.truth
         self._tolerance = int(episode.policy.get("amount_tolerance_minor", 1))
+        self._available_evidence = (
+            available_evidence_ids(episode.open_data()) if self._strict else None
+        )
         self.last_result = None
         self.last_reward = None
         self.submissions = 0
@@ -43,7 +54,11 @@ class Evaluator:
         self, payload: Any, inspection_steps: int, expose: bool = True
     ) -> dict[str, Any]:
         try:
-            normalized = validate_findings_payload(payload)
+            normalized = (
+                validate_findings_payload_strict(payload)
+                if self._strict
+                else validate_findings_payload(payload)
+            )
             if normalized["episode_id"] != self._episode.manifest["episode_id"]:
                 raise FindingError("episode_id does not match the active episode")
         except FindingError:
@@ -55,8 +70,16 @@ class Evaluator:
                 "metrics": {} if not expose else {"invalid": True, "reward": -1.0},
             }
 
-        result = score(self._truth, normalized, self._tolerance)
-        reward = terminal_reward(result.f1, inspection_steps)
+        result = score(
+            self._truth,
+            normalized,
+            self._tolerance,
+            strict=self._strict,
+            available_evidence=self._available_evidence,
+        )
+        reward = terminal_reward(
+            result.f1, inspection_steps, exact=self._strict
+        )
         self.last_result = result
         self.last_reward = reward
         self.submissions += 1

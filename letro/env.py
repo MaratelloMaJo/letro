@@ -148,6 +148,36 @@ class AuditEnv:
             self._info(truncated=True),
         )
 
+    def truncate(self) -> tuple[dict[str, Any], float, bool, bool, dict[str, Any]]:
+        """End the episode because the wall-clock limit was exceeded."""
+        if self._done:
+            return (
+                self._observation(),
+                0.0,
+                True,
+                self._truncated,
+                self._info(error="episode_finished"),
+            )
+        self._done = True
+        self._truncated = True
+        reward = (
+            terminal_reward(0.0, self._inspection_steps)
+            if self._expose_reward
+            else 0.0
+        )
+        self._last_result = {
+            "action": "timeout",
+            "ok": False,
+            "error": "time limit exceeded; the final answer is empty",
+        }
+        return (
+            self._observation(),
+            reward,
+            True,
+            True,
+            self._info(truncated=True),
+        )
+
     def step(
         self, action: Any
     ) -> tuple[dict[str, Any], float, bool, bool, dict[str, Any]]:

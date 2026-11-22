@@ -321,6 +321,84 @@ def validate_findings_payload(payload: Any) -> dict[str, Any]:
     return {"episode_id": episode_id.strip(), "findings": normalized}
 
 
+def validate_findings_payload_strict(payload: Any) -> dict[str, Any]:
+    """Validate the official jury's findings contract without normalization.
+
+    Unlike :func:`validate_findings_payload`, this keeps IDs and currency
+    exactly as submitted and accepts an unknown string type.  An unknown type
+    is structurally valid but cannot match a truth issue, so it becomes a false
+    positive rather than a whole-submit error.
+    """
+    if not isinstance(payload, dict):
+        raise FindingError("findings must be an object")
+    episode_id = payload.get("episode_id")
+    if not isinstance(episode_id, str) or not episode_id:
+        raise FindingError("episode_id is required")
+    findings = payload.get("findings")
+    if not isinstance(findings, list):
+        raise FindingError("findings must be an array")
+    if len(findings) > MAX_FINDINGS:
+        raise FindingError(f"at most {MAX_FINDINGS} findings are allowed")
+
+    normalized: list[dict[str, Any]] = []
+    for index, item in enumerate(findings):
+        if not isinstance(item, dict):
+            raise FindingError(f"finding {index} must be an object")
+        kind = item.get("type")
+        if not isinstance(kind, str) or not kind:
+            raise FindingError(f"finding {index} requires a type")
+        affected = item.get("affected_ids")
+        if not isinstance(affected, list) or not affected:
+            raise FindingError(f"finding {index} requires affected_ids")
+        if len(affected) > 20:
+            raise FindingError(f"finding {index} has too many affected_ids")
+        ids = []
+        for value in affected:
+            if not isinstance(value, str) or not value or len(value) > 64:
+                raise FindingError(f"finding {index} has an invalid affected id")
+            ids.append(value)
+        amount = item.get("claimed_amount_minor")
+        if isinstance(amount, bool) or not isinstance(amount, int):
+            raise FindingError(
+                f"finding {index} requires integer claimed_amount_minor"
+            )
+        if amount < 0:
+            raise FindingError(f"finding {index} amount must be non-negative")
+        currency = item.get("currency")
+        if not isinstance(currency, str) or not currency:
+            raise FindingError(f"finding {index} requires currency")
+        evidence = item.get("evidence_ids", [])
+        if not isinstance(evidence, list):
+            raise FindingError(f"finding {index} evidence_ids must be an array")
+        if len(evidence) > MAX_EVIDENCE_IDS:
+            raise FindingError(
+                f"finding {index} exceeds {MAX_EVIDENCE_IDS} evidence ids"
+            )
+        evidence_ids = []
+        for value in evidence:
+            if not isinstance(value, str) or not value or len(value) > 64:
+                raise FindingError(f"finding {index} has an invalid evidence id")
+            evidence_ids.append(value)
+        explanation = item.get("explanation", "")
+        if not isinstance(explanation, str):
+            raise FindingError(f"finding {index} explanation must be a string")
+        if len(explanation) > MAX_EXPLANATION_CHARS:
+            raise FindingError(
+                f"finding {index} explanation exceeds {MAX_EXPLANATION_CHARS} chars"
+            )
+        normalized.append(
+            {
+                "type": kind,
+                "affected_ids": ids,
+                "claimed_amount_minor": amount,
+                "currency": currency,
+                "evidence_ids": evidence_ids,
+                "explanation": explanation,
+            }
+        )
+    return {"episode_id": episode_id, "findings": normalized}
+
+
 def validate_truth(truth: Any) -> None:
     if not isinstance(truth, dict):
         raise ConfigError("truth must be an object")
