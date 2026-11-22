@@ -58,6 +58,11 @@ DEFAULT_CONFIG: dict[str, Any] = {
     "clean": False,
     "mode": "train",
     "variant": 0,
+    "gap_mode": "partial",
+    "composite_scenario": "alternate",
+    "split_payment": True,
+    "refund": True,
+    "recurring": True,
 }
 
 
@@ -147,6 +152,21 @@ def validate_config(config: dict[str, Any] | None) -> dict[str, Any]:
             errors[key] = 0
     if merged.get("mode") not in ("train", "eval", "verify"):
         raise ConfigError("mode must be train, eval or verify")
+
+    gap_mode = merged.get("gap_mode", "partial")
+    if gap_mode not in ("partial", "missing", "mixed"):
+        raise ConfigError('gap_mode must be "partial", "missing" or "mixed"')
+
+    composite_scenario = merged.get("composite_scenario", "alternate")
+    if composite_scenario not in ("alternate", "first", "second", "both"):
+        raise ConfigError(
+            'composite_scenario must be "alternate", "first", "second" or "both"'
+        )
+
+    for key in ("split_payment", "refund", "recurring"):
+        value = merged.get(key, True)
+        if not isinstance(value, bool):
+            raise ConfigError(f"{key} must be a boolean")
 
     ledger_rows = sizes.get("ledger_rows", 0)
     if ledger_rows and ledger_rows < MIN_LEDGER_ROWS:

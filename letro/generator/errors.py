@@ -206,7 +206,9 @@ def _inject_duplicate(episode: Episode, rng, used: set[str]) -> dict[str, Any] |
     return None
 
 
-def _inject_gap(episode: Episode, rng, used: set[str]) -> dict[str, Any] | None:
+def _inject_gap(
+    episode: Episode, rng, used: set[str], gap_mode: str = "partial"
+) -> dict[str, Any] | None:
     base = episode.manifest["base_currency"]
     payments = [
         payment
@@ -238,8 +240,22 @@ def _inject_gap(episode: Episode, rng, used: set[str]) -> dict[str, Any] | None:
         if len(ar_rows) != 1:
             continue
         ar = ar_rows[0]
-        gap = max(1, int(ar["credit_minor"] * 0.4))
-        ar["credit_minor"] -= gap
+        if gap_mode == "missing":
+            # Full missing allocation: remove the entire AR credit and post it
+            # to suspense, so the expected gap equals the full allocation.
+            gap = ar["credit_minor"]
+            ar["credit_minor"] = 0
+        elif gap_mode == "mixed":
+            if rng.random() < 0.5:
+                gap = ar["credit_minor"]
+                ar["credit_minor"] = 0
+            else:
+                gap = max(1, int(ar["credit_minor"] * 0.4))
+                ar["credit_minor"] -= gap
+        else:
+            # partial (default): reduce the AR credit by 40%.
+            gap = max(1, int(ar["credit_minor"] * 0.4))
+            ar["credit_minor"] -= gap
         suspense = _add_row(
             episode,
             timestamp=ar["timestamp"],
@@ -586,7 +602,9 @@ def inject_errors(episode: Episode, seed: int, config: dict[str, Any]) -> list[d
         if kind == "duplicate_invoice":
             step = function(episode, rng, used)
         elif kind == "payment_allocation_gap":
-            step = function(episode, rng, used)
+            step = function(
+                episode, rng, used, config.get("gap_mode", "partial")
+            )
         elif kind == "fx_rate_error":
             fx_counter += 1
             step = _inject_fx_invoice(episode, rng, used)
@@ -596,10 +614,17 @@ def inject_errors(episode: Episode, seed: int, config: dict[str, Any]) -> list[d
             step = function(episode, rng, used)
         elif kind == "composite":
             composite_counter += 1
-            if composite_counter % 2 == 1:
+            scenario = config.get("composite_scenario", "alternate")
+            if scenario == "first":
                 step = _composite_boundary_fx(episode, rng, used)
-            else:
+            elif scenario == "second":
                 step = _composite_gap_cutoff(episode, rng, used)
+            else:
+                # "alternate" and "both": alternate starting with boundary_fx.
+                if composite_counter % 2 == 1:
+                    step = _composite_boundary_fx(episode, rng, used)
+                else:
+                    step = _composite_gap_cutoff(episode, rng, used)
             if step is None:
                 step = _composite_gap_cutoff(episode, rng, used)
             if step is None:

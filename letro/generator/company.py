@@ -292,7 +292,11 @@ def build_company(seed: int, config: dict[str, Any]) -> Episode:
         # Leave some invoices legitimately open.
         if rng.random() < 0.18:
             continue
-        if rng.random() < 0.2 and payment_target - payment_number >= 2:
+        if (
+            config.get("split_payment", True)
+            and rng.random() < 0.2
+            and payment_target - payment_number >= 2
+        ):
             split = rng.uniform(0.35, 0.65)
             first = int(invoice["total_minor"] * split)
             parts = [first, invoice["total_minor"] - first]
@@ -378,7 +382,7 @@ def build_company(seed: int, config: dict[str, Any]) -> Episode:
     refund_candidates = list(paid_invoices)
     rng.shuffle(refund_candidates)
     for invoice in refund_candidates[: min(3, len(refund_candidates))]:
-        if rng.random() < 0.5:
+        if not config.get("refund", True) or rng.random() < 0.5:
             continue
         pay_seq = len(episode.payments) + 1
         payment_id = deterministic_id("PAY", pay_seq, 4)
@@ -413,17 +417,18 @@ def build_company(seed: int, config: dict[str, Any]) -> Episode:
         )
 
     # Recurring operating expenses, including legitimate identical amounts.
-    for index, (label, amount) in enumerate(EXPENSES):
-        for repeat in range(1 + (index % 2)):
-            exp_day = start + timedelta(days=min(days - 1, 2 + index * 2 + repeat * 11))
-            timestamp = iso_day(exp_day, offset)
-            add_entry(
-                timestamp,
-                entities[(index + repeat) % len(entities)]["entity_id"],
-                None,
-                None,
-                [("5000", amount, 0), ("1000", 0, amount)],
-            )
+    if config.get("recurring", True):
+        for index, (label, amount) in enumerate(EXPENSES):
+            for repeat in range(1 + (index % 2)):
+                exp_day = start + timedelta(days=min(days - 1, 2 + index * 2 + repeat * 11))
+                timestamp = iso_day(exp_day, offset)
+                add_entry(
+                    timestamp,
+                    entities[(index + repeat) % len(entities)]["entity_id"],
+                    None,
+                    None,
+                    [("5000", amount, 0), ("1000", 0, amount)],
+                )
 
     # Fill to the requested row count with ordinary operating entries.
     filler = 0
