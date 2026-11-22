@@ -28,7 +28,14 @@
         },
         "clean": false,
         "mode": "train",
-        "variant": 0
+        "variant": 0,
+        "gap_mode": "partial",
+        "composite_scenario": "alternate",
+        "split_payment": true,
+        "refund": true,
+        "recurring": true,
+        "force_split_payment": false,
+        "force_refund": false
       },
       "issues": [
         "duplicate_invoice",
@@ -68,7 +75,14 @@
         },
         "clean": true,
         "mode": "train",
-        "variant": 0
+        "variant": 0,
+        "gap_mode": "partial",
+        "composite_scenario": "alternate",
+        "split_payment": true,
+        "refund": true,
+        "recurring": true,
+        "force_split_payment": false,
+        "force_refund": false
       },
       "issues": [],
       "clean": true,
@@ -101,7 +115,14 @@
         },
         "clean": false,
         "mode": "train",
-        "variant": 0
+        "variant": 0,
+        "gap_mode": "partial",
+        "composite_scenario": "alternate",
+        "split_payment": true,
+        "refund": true,
+        "recurring": true,
+        "force_split_payment": false,
+        "force_refund": false
       },
       "issues": [
         "duplicate_invoice",
@@ -138,7 +159,14 @@
         },
         "clean": false,
         "mode": "train",
-        "variant": 0
+        "variant": 0,
+        "gap_mode": "partial",
+        "composite_scenario": "alternate",
+        "split_payment": true,
+        "refund": true,
+        "recurring": true,
+        "force_split_payment": false,
+        "force_refund": false
       },
       "issues": [
         "fx_rate_error",
@@ -176,7 +204,14 @@
         },
         "clean": false,
         "mode": "train",
-        "variant": 0
+        "variant": 0,
+        "gap_mode": "partial",
+        "composite_scenario": "alternate",
+        "split_payment": true,
+        "refund": true,
+        "recurring": true,
+        "force_split_payment": false,
+        "force_refund": false
       },
       "issues": [
         "fx_rate_error",
@@ -214,7 +249,14 @@
         },
         "clean": false,
         "mode": "train",
-        "variant": 0
+        "variant": 0,
+        "gap_mode": "partial",
+        "composite_scenario": "alternate",
+        "split_payment": true,
+        "refund": true,
+        "recurring": true,
+        "force_split_payment": false,
+        "force_refund": false
       },
       "issues": [
         "duplicate_invoice",
@@ -250,7 +292,14 @@
         },
         "clean": false,
         "mode": "train",
-        "variant": 0
+        "variant": 0,
+        "gap_mode": "partial",
+        "composite_scenario": "alternate",
+        "split_payment": true,
+        "refund": true,
+        "recurring": true,
+        "force_split_payment": false,
+        "force_refund": false
       },
       "issues": [
         "payment_allocation_gap",
@@ -286,7 +335,14 @@
         },
         "clean": true,
         "mode": "train",
-        "variant": 0
+        "variant": 0,
+        "gap_mode": "partial",
+        "composite_scenario": "alternate",
+        "split_payment": true,
+        "refund": true,
+        "recurring": true,
+        "force_split_payment": false,
+        "force_refund": false
       },
       "issues": [],
       "clean": true,
@@ -319,7 +375,14 @@
         },
         "clean": false,
         "mode": "train",
-        "variant": 0
+        "variant": 0,
+        "gap_mode": "partial",
+        "composite_scenario": "alternate",
+        "split_payment": true,
+        "refund": true,
+        "recurring": true,
+        "force_split_payment": false,
+        "force_refund": false
       },
       "issues": [
         "duplicate_invoice",
@@ -359,7 +422,14 @@
         },
         "clean": false,
         "mode": "train",
-        "variant": 0
+        "variant": 0,
+        "gap_mode": "partial",
+        "composite_scenario": "alternate",
+        "split_payment": true,
+        "refund": true,
+        "recurring": true,
+        "force_split_payment": false,
+        "force_refund": false
       },
       "issues": [
         "duplicate_invoice",
@@ -399,7 +469,14 @@
         },
         "clean": true,
         "mode": "train",
-        "variant": 0
+        "variant": 0,
+        "gap_mode": "partial",
+        "composite_scenario": "alternate",
+        "split_payment": true,
+        "refund": true,
+        "recurring": true,
+        "force_split_payment": false,
+        "force_refund": false
       },
       "issues": [],
       "clean": true,
@@ -432,7 +509,14 @@
         },
         "clean": true,
         "mode": "train",
-        "variant": 0
+        "variant": 0,
+        "gap_mode": "partial",
+        "composite_scenario": "alternate",
+        "split_payment": true,
+        "refund": true,
+        "recurring": true,
+        "force_split_payment": false,
+        "force_refund": false
       },
       "issues": [],
       "clean": true,
@@ -465,7 +549,14 @@
         },
         "clean": true,
         "mode": "train",
-        "variant": 0
+        "variant": 0,
+        "gap_mode": "partial",
+        "composite_scenario": "alternate",
+        "split_payment": true,
+        "refund": true,
+        "recurring": true,
+        "force_split_payment": false,
+        "force_refund": false
       },
       "issues": [],
       "clean": true,
@@ -498,7 +589,14 @@
         },
         "clean": true,
         "mode": "train",
-        "variant": 3
+        "variant": 3,
+        "gap_mode": "partial",
+        "composite_scenario": "alternate",
+        "split_payment": true,
+        "refund": true,
+        "recurring": true,
+        "force_split_payment": false,
+        "force_refund": false
       },
       "issues": [],
       "clean": true,
@@ -531,7 +629,14 @@
         },
         "clean": true,
         "mode": "train",
-        "variant": 0
+        "variant": 0,
+        "gap_mode": "partial",
+        "composite_scenario": "alternate",
+        "split_payment": true,
+        "refund": true,
+        "recurring": true,
+        "force_split_payment": false,
+        "force_refund": false
       },
       "issues": [],
       "clean": true,
@@ -564,7 +669,14 @@
         },
         "clean": false,
         "mode": "train",
-        "variant": 0
+        "variant": 0,
+        "gap_mode": "partial",
+        "composite_scenario": "alternate",
+        "split_payment": true,
+        "refund": true,
+        "recurring": true,
+        "force_split_payment": false,
+        "force_refund": false
       },
       "issues": [
         "fx_rate_error",
@@ -602,7 +714,14 @@
         },
         "clean": false,
         "mode": "train",
-        "variant": 0
+        "variant": 0,
+        "gap_mode": "partial",
+        "composite_scenario": "alternate",
+        "split_payment": true,
+        "refund": true,
+        "recurring": true,
+        "force_split_payment": false,
+        "force_refund": false
       },
       "issues": [
         "duplicate_invoice",
@@ -641,7 +760,14 @@
         },
         "clean": false,
         "mode": "train",
-        "variant": 0
+        "variant": 0,
+        "gap_mode": "partial",
+        "composite_scenario": "alternate",
+        "split_payment": true,
+        "refund": true,
+        "recurring": true,
+        "force_split_payment": false,
+        "force_refund": false
       },
       "issues": [
         "fx_rate_error",
@@ -681,7 +807,14 @@
         },
         "clean": false,
         "mode": "train",
-        "variant": 0
+        "variant": 0,
+        "gap_mode": "partial",
+        "composite_scenario": "alternate",
+        "split_payment": true,
+        "refund": true,
+        "recurring": true,
+        "force_split_payment": false,
+        "force_refund": false
       },
       "issues": [
         "fx_rate_error",
@@ -719,7 +852,14 @@
         },
         "clean": false,
         "mode": "train",
-        "variant": 0
+        "variant": 0,
+        "gap_mode": "partial",
+        "composite_scenario": "alternate",
+        "split_payment": true,
+        "refund": true,
+        "recurring": true,
+        "force_split_payment": false,
+        "force_refund": false
       },
       "issues": [
         "payment_allocation_gap",
