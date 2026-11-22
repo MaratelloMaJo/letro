@@ -184,6 +184,62 @@ class GeneratorScenarioTests(unittest.TestCase):
         )
         self.assertIsInstance(episode.manifest["episode_id"], str)
 
+    def test_force_split_payment_guarantees_split(self):
+        """force_split_payment=true guarantees at least one split payment (D02)."""
+        found = False
+        for seed in range(1, 11):
+            episode = generate_episode(
+                seed, base_config({"force_split_payment": True})
+            )
+            by_invoice: dict[str, int] = {}
+            for payment in episode.payments:
+                if payment["amount_minor"] > 0:
+                    ref = payment["invoice_refs"][0] if payment["invoice_refs"] else None
+                    if ref:
+                        by_invoice[ref] = by_invoice.get(ref, 0) + 1
+            if any(count > 1 for count in by_invoice.values()):
+                found = True
+                break
+        self.assertTrue(found, "force_split_payment should produce a split payment")
+
+    def test_force_refund_guarantees_refund(self):
+        """force_refund=true guarantees at least one negative payment (D03)."""
+        found = False
+        for seed in range(1, 11):
+            episode = generate_episode(
+                seed, base_config({"force_refund": True})
+            )
+            if any(payment["amount_minor"] < 0 for payment in episode.payments):
+                found = True
+                break
+        self.assertTrue(found, "force_refund should produce a refund")
+
+    def test_clean_with_force_split_payment_has_empty_truth(self):
+        """clean=true + force_split_payment: split payment but no truth issues."""
+        config = base_config({})
+        config["clean"] = True
+        config["force_split_payment"] = True
+        episode = generate_episode(7, config)
+        self.assertEqual(episode.truth["issues"], [])
+        by_invoice: dict[str, int] = {}
+        for payment in episode.payments:
+            if payment["amount_minor"] > 0:
+                ref = payment["invoice_refs"][0] if payment["invoice_refs"] else None
+                if ref:
+                    by_invoice[ref] = by_invoice.get(ref, 0) + 1
+        self.assertTrue(any(count > 1 for count in by_invoice.values()),
+                        "clean episode with forced split should still have a split")
+
+    def test_clean_with_force_refund_has_empty_truth(self):
+        """clean=true + force_refund: refund but no truth issues."""
+        config = base_config({})
+        config["clean"] = True
+        config["force_refund"] = True
+        episode = generate_episode(7, config)
+        self.assertEqual(episode.truth["issues"], [])
+        self.assertTrue(any(p["amount_minor"] < 0 for p in episode.payments),
+                        "clean episode with forced refund should still have a refund")
+
 
 if __name__ == "__main__":
     unittest.main()

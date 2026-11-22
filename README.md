@@ -352,6 +352,8 @@ scenario deterministically (defaults preserve current behavior):
 | `split_payment` | boolean | `true` | Allow split payments (D02-style). |
 | `refund` | boolean | `true` | Allow refunds (D03-style). |
 | `recurring` | boolean | `true` | Allow recurring expenses (D05-style legitimately repeating amounts). |
+| `force_split_payment` | boolean | `false` | Guarantee at least one split payment in clean books (D02). |
+| `force_refund` | boolean | `false` | Guarantee at least one refund in clean books (D03). |
 
 Unknown top-level config keys are rejected at validation time.
 

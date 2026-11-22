@@ -63,6 +63,8 @@ DEFAULT_CONFIG: dict[str, Any] = {
     "split_payment": True,
     "refund": True,
     "recurring": True,
+    "force_split_payment": False,
+    "force_refund": False,
 }
 
 
@@ -165,6 +167,11 @@ def validate_config(config: dict[str, Any] | None) -> dict[str, Any]:
 
     for key in ("split_payment", "refund", "recurring"):
         value = merged.get(key, True)
+        if not isinstance(value, bool):
+            raise ConfigError(f"{key} must be a boolean")
+
+    for key in ("force_split_payment", "force_refund"):
+        value = merged.get(key, False)
         if not isinstance(value, bool):
             raise ConfigError(f"{key} must be a boolean")
 

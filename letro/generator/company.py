@@ -315,6 +315,7 @@ def build_company(seed: int, config: dict[str, Any]) -> Episode:
             payment_number -= len(parts)
 
     paid_invoices: list[dict[str, Any]] = []
+    split_created = False
     for invoice, parts in payment_plan:
         issued_day = date.fromisoformat(invoice["issued_at"][:10])
         earliest = issued_day + timedelta(days=1)
@@ -376,11 +377,79 @@ def build_company(seed: int, config: dict[str, Any]) -> Episode:
                 payment_id,
                 postings,
             )
+        if len(parts) > 1:
+            split_created = True
         paid_invoices.append(invoice)
+
+    # Force a split payment when requested and none occurred naturally.
+    if config.get("force_split_payment") and not split_created and paid_invoices:
+        invoice = paid_invoices[-1]
+        total = invoice["total_minor"]
+        first = max(1, total // 2)
+        second = total - first
+        if second > 0:
+            issued_day = date.fromisoformat(invoice["issued_at"][:10])
+            earliest = issued_day + timedelta(days=1)
+            latest = min(
+                end,
+                date.fromisoformat(invoice["due_at"][:10]),
+                start + timedelta(days=int(days * 0.92)),
+            )
+            if latest < earliest:
+                latest = min(end, earliest)
+            pay_seq = len(episode.payments) + 1
+            payment_id = deterministic_id("PAY", pay_seq, 4)
+            for part_index, part in enumerate([first, second]):
+                pay_day = earliest + timedelta(
+                    days=rng.randint(0, max(0, (latest - earliest).days))
+                )
+                timestamp = iso_day(pay_day, offset)
+                episode.payments.append(
+                    {
+                        "doc_id": deterministic_id("DOC-PAY", pay_seq, 4),
+                        "payment_id": payment_id,
+                        "timestamp": timestamp,
+                        "currency": invoice["currency"],
+                        "amount_minor": part,
+                        "invoice_refs": [invoice["invoice_id"]],
+                    }
+                )
+                cash_base = convert_minor(
+                    part,
+                    rate_on(episode, invoice["currency"], pay_day.isoformat()),
+                    invoice["currency"],
+                    base,
+                )
+                allocated_base = proportional_base(
+                    convert_minor(
+                        total,
+                        rate_on(episode, invoice["currency"],
+                                invoice["issued_at"][:10]),
+                        invoice["currency"],
+                        base,
+                    ),
+                    part,
+                    total,
+                )
+                fx_delta = cash_base - allocated_base
+                postings = [("1000", cash_base, 0), ("1100", 0, allocated_base)]
+                if fx_delta > 0:
+                    postings.append(("4900", 0, fx_delta))
+                elif fx_delta < 0:
+                    postings.append(("4900", -fx_delta, 0))
+                add_entry(
+                    timestamp,
+                    invoice["entity_id"],
+                    invoice["invoice_id"],
+                    payment_id,
+                    postings,
+                )
+            split_created = True
 
     # Refunds: negative payments, revenue reversal against cash.
     refund_candidates = list(paid_invoices)
     rng.shuffle(refund_candidates)
+    refund_created = False
     for invoice in refund_candidates[: min(3, len(refund_candidates))]:
         if not config.get("refund", True) or rng.random() < 0.5:
             continue
@@ -415,6 +484,41 @@ def build_company(seed: int, config: dict[str, Any]) -> Episode:
             payment_id,
             [("4000", cash_base, 0), ("1000", 0, cash_base)],
         )
+        refund_created = True
+
+    # Force a refund when requested and none occurred naturally.
+    if config.get("force_refund") and not refund_created and paid_invoices:
+        invoice = paid_invoices[-1]
+        amount = -max(1, int(invoice["total_minor"] * 0.1))
+        pay_seq = len(episode.payments) + 1
+        payment_id = deterministic_id("PAY", pay_seq, 4)
+        issued_day = date.fromisoformat(invoice["issued_at"][:10])
+        refund_day = min(end, issued_day + timedelta(days=15))
+        timestamp = iso_day(refund_day, offset)
+        episode.payments.append(
+            {
+                "doc_id": deterministic_id("DOC-PAY", pay_seq, 4),
+                "payment_id": payment_id,
+                "timestamp": timestamp,
+                "currency": invoice["currency"],
+                "amount_minor": amount,
+                "invoice_refs": [invoice["invoice_id"]],
+            }
+        )
+        cash_base = convert_minor(
+            -amount,
+            rate_on(episode, invoice["currency"], refund_day.isoformat()),
+            invoice["currency"],
+            base,
+        )
+        add_entry(
+            timestamp,
+            invoice["entity_id"],
+            invoice["invoice_id"],
+            payment_id,
+            [("4000", cash_base, 0), ("1000", 0, cash_base)],
+        )
+        refund_created = True
 
     # Recurring operating expenses, including legitimate identical amounts.
     if config.get("recurring", True):
