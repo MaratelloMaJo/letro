@@ -397,7 +397,7 @@ scripts/               episode build, trajectory recording, policy metrics, demo
 episodes/train|dev/    10 + 10 open episodes with closed labels
 trajectories/          recorded runs and summary
 tests/                 190 unit and integration tests
-docs/                  design, failure analysis, readiness, runbook, evidence
+docs/                  design, failure analysis, runbook, evidence
 ```
 
 ## Limitations
