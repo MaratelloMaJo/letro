@@ -133,9 +133,18 @@ The clean archive now passes 100.00 on a fresh extraction.
   balance, truth reproduction, evidence resolution and permutation checks.
 - Jury: 20 hidden-style seeds, four adapters, 20 permutations and 5 exact replays.
 
-The suite has 100 tests and passes in about 5.5 seconds on the development machine.
+The suite has 134 tests and passes in about 12 seconds on the development machine.
 The verifier's 85 technical checks all pass, the 500-episode fuzz has zero failures,
-and the 20-episode jury run passes every check.
+and the 20-episode jury run passes every check. In addition, the proof pack runs
+cleanly:
+
+| Tool | Result |
+| --- | --- |
+| `python -m letro.redteam` | 12/12 attacks bounded, all below their published limit |
+| `python -m letro.proof` | 6/6 cases: one added issue per simple type, two per composite |
+| `python -m letro.isolation` | canary not observable; static boundary clean |
+| `python -m letro.bench` | generation/reset/100 steps within 60 s; memory < 4 GB; archive < 1 GB |
+| `python -m letro.difficulty` | per-type metrics written to `docs/evidence/difficulty.json` |
 
 ## 4. Residual risks
 

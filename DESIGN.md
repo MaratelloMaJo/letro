@@ -180,7 +180,33 @@ shows the open records, runs a policy, and displays the evaluator's terminal
 metrics. It never serves `truth.json`, never accepts a filesystem path from a client,
 and is not part of the scored environment.
 
-## 8. Measured evidence
+## 8. Proof pack
+
+The proof pack is three independent guarantees:
+
+**Truth is derived, not authored.** `letro/proof.py` regenerates a clean episode and a
+single-error episode for each error type and both composites. For every case it
+asserts the audit difference is exactly one issue (two for a composite) with the
+right type, that each allowed evidence set is inclusion-minimal and sufficient, and
+that every expected amount is recomputed by a separate calculator that reads only
+invoices, payments, FX and policy — not `letro.generator.audit` arithmetic.
+
+**Reward cannot be gamed.** `letro/redteam.py` runs 12 adversarial submissions and
+asserts each stays at or below its published bound: mark-all ≤ 0.2, duplicate spam ≤
+0.2, evidence-less / wrong currency / wrong amount / guessed IDs / empty-on-error ≤
+0.0, timeout ≤ terminal reward at zero F1, oversized payload = −1, empty-on-clean =
+1.0, resubmit does not improve, and a duplicated correct finding scores strictly less
+than a single correct finding.
+
+**Truth cannot leak.** `letro/isolation.py` plants a unique canary string in a copied
+truth/provenance object, runs every action (list every table, get_record,
+get_document, calculator, invalid action, submit) through an eval-mode environment,
+and scans every observation, info, error string and trajectory record for the canary.
+A static AST check forbids `letro/env.py` and `letro/tools.py` from importing the
+evaluator, the audit module or the factory. `LetroEnv` lives in `letro/lazy.py`; the
+lazy boundary is exercised by `AuditEnv()` building an episode on `reset`.
+
+## 9. Measured evidence
 
 `python -m letro.verify` runs 85 technical checks and five engineering criteria. On
 the shipped artefacts all technical checks pass; the engineering score depends on the
@@ -195,8 +221,8 @@ F1 1.000 and reward 1.000. The naive baseline fails on clean books (F1 0.000)
 because it accuses every open invoice, which is exactly the behaviour the reward
 must punish; the reference proves the same episodes are solvable.
 
-The hardening evidence is in `docs/evidence/hardening.json`: 100 unit and integration
-tests, 84 verifier checks, 500 fuzz episodes with zero failures across five presets,
+The hardening evidence is in `docs/evidence/hardening.json`: 134 unit and integration
+tests, 85 technical verifier checks, 500 fuzz episodes with zero failures across five presets,
 and a 20-episode jury run with 20/20 oracle and permutation checks and 5/5 exact
 replays. The workbench is a demo surface and is not counted in the score.
 

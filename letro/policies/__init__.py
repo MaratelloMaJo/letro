@@ -6,6 +6,7 @@ from typing import Any
 
 from ..generator import Episode
 from .base import Policy
+from .limited import LimitedPolicy
 from .mark_all import MarkAllPolicy
 from .oracle import OraclePolicy
 from .random_explorer import RandomExplorerPolicy
@@ -36,6 +37,7 @@ def make_policy(
 
 
 __all__ = [
+    "LimitedPolicy",
     "MarkAllPolicy",
     "OraclePolicy",
     "POLICY_NAMES",

@@ -32,10 +32,14 @@ offline, reproducible RL environment.
 | --- | --- | --- |
 | One command verifies the submission | `python -m letro.verify` → `TOTAL 100.00`, `RESULT: PASS`, exit 0; 2.58 s | PASS |
 | A clean copy works without local state | archived `HEAD` with `git archive`, extracted to `%TEMP%\letro-clean-final2`, ran the verifier → 100.00, exit 0; a CRLF checkout no longer breaks the digest | PASS |
-| Tests pass | `python -m unittest discover -s tests -q` → 100 tests, 0 failures, 5.5 s (also 3.11.9) | PASS |
+| Tests pass | `python -m unittest discover -s tests -q` → 134 tests, 0 failures, ~12 s (also 3.11.9) | PASS |
 | Truth cannot leak into observations | `letro/env.py` holds only open data + a `finalize` callback; `letro/evaluator.py` owns truth; `letro/trajectory.py` scans observations for forbidden keys; `tests/test_leaks.py` | PASS |
 | Every truth issue is provable from open files | `letro/generator/audit.py` reads only open records; generation raises on count mismatch; verifier data criterion 21/21; evidence ids resolve in `tests/test_generator.py` | PASS |
 | Reward resists mark-all and persuasive text | one-to-one matching, canonical ids, evidence sets; mark_all F1 0.000, reward -1.000; `tests/test_attacks.py` | PASS |
+| Proof pack: reward cannot be gamed | `python -m letro.redteam` → 12/12 attacks below published bound (mark-all ≤ 0.2, duplicate spam ≤ 0.2, evidence-less/wrong-currency/wrong-amount/guessed-IDs/empty-on-error ≤ 0.0, empty-on-clean = 1.0) | PASS |
+| Proof pack: truth is derived and minimal | `python -m letro.proof` → 6/6 cases, one added issue per simple type, two per composite, inclusion-minimal independently recomputed evidence | PASS |
+| Proof pack: truth cannot leak | `python -m letro.isolation` → canary not observable in eval mode; static AST boundary clean for `env.py` and `tools.py` | PASS |
+| Proof pack: compute envelope within limits | `python -m letro.bench` → generation/reset/100 steps within 60 s; memory < 4 GB; archive < 1 GB; hash-seed digest stable | PASS |
 | Determinism and id/order invariance | byte-identical replay; permutation renames and shuffles all ids; 20/20 paired checks; `tests/test_reproducibility.py` | PASS |
 | Trajectories contain no closed truth | 500 records, 40 runs, exact seven fields; validator rejects leaks; `trajectories/summary.json` | PASS |
 | Container is defined | `Dockerfile` uses `python:3.11-slim`, non-root, `CMD ["python", "-m", "letro.verify"]` | PASS (definition) |

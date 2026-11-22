@@ -9,6 +9,10 @@ const state = {
   total: 0,
   running: false,
   lastFocus: null,
+  challengeRunning: false,
+  leaderboard: null,
+  leaderboardEpisode: null,
+  proof: "challenge",
 };
 
 const el = (tag, attrs = {}, children = []) => {
@@ -107,6 +111,24 @@ const drawer = document.getElementById("drawer");
 const drawerTitle = document.getElementById("drawer-title");
 const drawerBody = document.getElementById("drawer-body");
 const drawerClose = document.getElementById("drawer-close");
+const evidenceChain = document.getElementById("evidence-chain");
+const evidenceNote = document.getElementById("evidence-note");
+const evidenceRecords = document.getElementById("evidence-records");
+const challengeInput = document.getElementById("challenge-input");
+const challengeRun = document.getElementById("challenge-run");
+const challengeNote = document.getElementById("challenge-note");
+const challengeError = document.getElementById("challenge-error");
+const challengeResult = document.getElementById("challenge-result");
+const challengeF1 = document.getElementById("challenge-f1");
+const challengeP = document.getElementById("challenge-p");
+const challengeR = document.getElementById("challenge-r");
+const challengeReward = document.getElementById("challenge-reward");
+const challengeTp = document.getElementById("challenge-tp");
+const challengeFp = document.getElementById("challenge-fp");
+const challengeFn = document.getElementById("challenge-fn");
+const challengeFindings = document.getElementById("challenge-findings");
+const leaderboardBody = document.getElementById("leaderboard-body");
+const leaderboardError = document.getElementById("leaderboard-error");
 
 const policyNotes = {
   reconciliation: "Flags every open invoice balance; legitimately open invoices become false accusations.",
@@ -183,6 +205,25 @@ const updateSummary = (summary) => {
   stampWord.textContent = "unscored";
   stampSub.textContent = "run a policy";
   stamp.className = "stamp unscored";
+  evidenceChain.hidden = true;
+  evidenceRecords.replaceChildren();
+  evidenceNote.textContent = "—";
+  challengeInput.value = JSON.stringify(
+    { episode_id: summary.episode_id, findings: [] },
+    null,
+    2,
+  );
+  challengeResult.hidden = true;
+  challengeError.hidden = true;
+  challengeNote.textContent = "Empty findings are a valid clean-book answer.";
+  state.leaderboard = null;
+  state.leaderboardEpisode = null;
+  leaderboardError.hidden = true;
+  leaderboardBody.replaceChildren(
+    el("tr", {}, [
+      el("td", { colspan: "7", class: "dim", text: "Select the leaderboard tab to load it." }),
+    ]),
+  );
 };
 
 const selectEpisode = async (id) => {
@@ -197,10 +238,11 @@ const selectEpisode = async (id) => {
     renderRegister();
     empty.hidden = true;
     work.hidden = false;
-    document.querySelectorAll(".tabs button").forEach((button) => {
+    document.querySelectorAll(".journal .tabs button").forEach((button) => {
       button.setAttribute("aria-selected", button.dataset.table === "ledger" ? "true" : "false");
     });
     await loadTable(0);
+    if (state.proof === "leaderboard") loadLeaderboard(true);
   } catch (error) {
     showError(error.message);
   }
@@ -319,11 +361,11 @@ const renderFindings = (findings, declared) => {
   findingsNote.textContent = `${findings.length} submitted · ${declared} declared`;
   for (const finding of findings) {
     const ids = (finding.affected_ids || []).map((id) => {
-      const table = id.startsWith("LED-") ? "ledger" : id.startsWith("INV-") ? "invoices" : id.startsWith("PAY-") ? "payments" : id.startsWith("DOC-INV") ? "invoices" : id.startsWith("DOC-PAY") ? "payments" : null;
+      const table = evidenceTableFor(id);
       return table ? chip(id, table, id) : el("span", { class: "finding-label", text: id });
     });
     const evidence = (finding.evidence_ids || []).map((id) => {
-      const table = id.startsWith("LED-") ? "ledger" : id.startsWith("INV-") ? "invoices" : id.startsWith("PAY-") ? "payments" : id.startsWith("DOC-INV") ? "invoices" : id.startsWith("DOC-PAY") ? "payments" : null;
+      const table = evidenceTableFor(id);
       return table ? chip(id, table, id) : el("span", { class: "finding-label", text: id });
     });
     const item = el("li", {}, [
@@ -335,10 +377,159 @@ const renderFindings = (findings, declared) => {
         el("div", { class: "finding-ids" }, [el("span", { class: "finding-label", text: "affected" }), ...ids]),
         el("div", { class: "finding-evidence" }, [el("span", { class: "finding-label", text: "evidence" }), ...evidence]),
         el("p", { class: "finding-text", text: finding.explanation || "No explanation supplied." }),
+        evidence.length
+          ? el("button", {
+              class: "finding-evidence-link",
+              type: "button",
+              text: "Evidence chain",
+              onclick: () => openEvidence(finding),
+            })
+          : null,
       ]),
     ]);
     findingList.append(item);
   }
+};
+
+const evidenceTableFor = (id) => {
+  if (id.startsWith("LED-")) return "ledger";
+  if (id.startsWith("INV-") || id.startsWith("DOC-INV")) return "invoices";
+  if (id.startsWith("PAY-") || id.startsWith("DOC-PAY")) return "payments";
+  return null;
+};
+
+const openEvidence = async (finding) => {
+  if (!state.summary) return;
+  const ids = finding.evidence_ids || [];
+  if (!ids.length) {
+    showError("This finding has no evidence ids.");
+    return;
+  }
+  try {
+    const params = new URLSearchParams({ ids: ids.join(",") });
+    const payload = await fetchJSON(
+      `/api/episodes/${encodeURIComponent(state.summary.episode_id)}/evidence?${params.toString()}`,
+    );
+    evidenceChain.hidden = false;
+    evidenceNote.textContent = `${payload.records.length} resolved · ${finding.type}`;
+    evidenceRecords.replaceChildren();
+    for (const item of payload.records) {
+      evidenceRecords.append(
+        el("article", { class: "evidence-card" }, [
+          el("h4", { text: item.id }),
+          el("p", { class: "evidence-table", text: item.table }),
+          el("pre", { text: JSON.stringify(item.record, null, 2) }),
+        ]),
+      );
+    }
+    if (payload.missing && payload.missing.length) {
+      evidenceRecords.append(
+        el("p", { class: "evidence-missing", text: `missing: ${payload.missing.join(", ")}` }),
+      );
+    }
+    evidenceChain.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  } catch (error) {
+    showError(error.message);
+  }
+};
+
+const runChallenge = async () => {
+  if (!state.summary || state.challengeRunning) return;
+  challengeError.hidden = true;
+  let parsed;
+  try {
+    parsed = JSON.parse(challengeInput.value);
+  } catch (_error) {
+    challengeError.textContent = "Payload is not valid JSON.";
+    challengeError.hidden = false;
+    return;
+  }
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+    challengeError.textContent = "Payload must be a JSON object.";
+    challengeError.hidden = false;
+    return;
+  }
+  const findings = { ...parsed };
+  if (!findings.episode_id) findings.episode_id = state.summary.episode_id;
+  state.challengeRunning = true;
+  challengeRun.disabled = true;
+  challengeRun.textContent = "Scoring…";
+  challengeResult.hidden = true;
+  challengeError.hidden = true;
+  try {
+    const result = await fetchJSON("/api/challenge", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        episode_id: state.summary.episode_id,
+        findings,
+      }),
+    });
+    challengeResult.hidden = false;
+    challengeF1.textContent = formatNumber(result.f1);
+    challengeP.textContent = formatNumber(result.precision);
+    challengeR.textContent = formatNumber(result.recall);
+    challengeReward.textContent = formatReward(result.reward);
+    challengeTp.textContent = result.tp;
+    challengeFp.textContent = result.fp;
+    challengeFn.textContent = result.fn;
+    const items = result.findings || [];
+    const matched = items.filter((item) => item.matched).length;
+    challengeFindings.textContent = `${matched} of ${items.length} findings matched.`;
+    challengeNote.textContent = "Aggregate only: no issue ids or hidden amounts.";
+  } catch (error) {
+    challengeResult.hidden = true;
+    challengeError.textContent = error.message;
+    challengeError.hidden = false;
+  } finally {
+    state.challengeRunning = false;
+    challengeRun.disabled = false;
+    challengeRun.textContent = "Score submission";
+  }
+};
+
+const renderLeaderboard = (payload) => {
+  leaderboardBody.replaceChildren();
+  for (const row of payload.rows || []) {
+    const tr = el("tr");
+    tr.append(
+      cell(row.policy, "mono"),
+      cell(row.label),
+      cell(formatNumber(row.mean_f1 ?? row.f1), "num"),
+      cell(formatNumber(row.precision), "num"),
+      cell(formatNumber(row.recall), "num"),
+      cell(formatReward(row.mean_reward ?? row.reward), "num"),
+      cell(row.mean_steps ?? row.steps, "num"),
+    );
+    leaderboardBody.append(tr);
+  }
+};
+
+const loadLeaderboard = async (force = false) => {
+  if (!state.summary) return;
+  if (!force && state.leaderboard && state.leaderboardEpisode === state.summary.episode_id) return;
+  leaderboardError.hidden = true;
+  try {
+    const payload = await fetchJSON(
+      `/api/leaderboard?episode_id=${encodeURIComponent(state.summary.episode_id)}`,
+    );
+    state.leaderboard = payload;
+    state.leaderboardEpisode = state.summary.episode_id;
+    renderLeaderboard(payload);
+  } catch (error) {
+    leaderboardError.textContent = error.message;
+    leaderboardError.hidden = false;
+  }
+};
+
+const selectProof = (name) => {
+  state.proof = name;
+  document.querySelectorAll("[data-proof]").forEach((button) => {
+    button.setAttribute("aria-selected", button.dataset.proof === name ? "true" : "false");
+  });
+  document.getElementById("proof-challenge").hidden = name !== "challenge";
+  document.getElementById("proof-leaderboard").hidden = name !== "leaderboard";
+  if (name === "leaderboard") loadLeaderboard();
 };
 
 const renderResult = (payload) => {
@@ -435,15 +626,19 @@ next.addEventListener("click", () => {
 });
 filter.addEventListener("input", renderRegister);
 drawerClose.addEventListener("click", closeDrawer);
+challengeRun.addEventListener("click", runChallenge);
+document.querySelectorAll("[data-proof]").forEach((button) => {
+  button.addEventListener("click", () => selectProof(button.dataset.proof));
+});
 document.addEventListener("keydown", (event) => {
   if (event.key === "Escape" && !drawer.hidden) closeDrawer();
 });
-document.querySelectorAll(".tabs button").forEach((button) => {
+document.querySelectorAll(".journal .tabs button").forEach((button) => {
   button.addEventListener("click", () => {
     if (!state.summary || state.running) return;
     state.table = button.dataset.table;
     state.cursor = 0;
-    document.querySelectorAll(".tabs button").forEach((other) => {
+    document.querySelectorAll(".journal .tabs button").forEach((other) => {
       other.setAttribute("aria-selected", other === button ? "true" : "false");
     });
     loadTable(0);
