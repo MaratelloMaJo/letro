@@ -33,6 +33,12 @@ Run the unit tests separately:
 python -m unittest discover -s tests -v
 ```
 
+Check the official judge adapter imports from the repository root:
+
+```console
+python -c "import judge_adapter; print(judge_adapter.__all__)"
+```
+
 ## Python API
 
 The environment has two construction styles. The lazy style is the one a jury
@@ -167,18 +173,23 @@ to ship silently.
 
 ## Actions
 
+The policy calls the canonical envelope `{"name":"<action>","args":{...}}`; the
+adapter translates it to the internal `{"type":...}` form. Required names:
+
 | Action | Arguments | Result |
 | --- | --- | --- |
-| `list_records` | `table`, `cursor`, `limit` | one page of `ledger`, `invoices`, `payments` or `fx`; `limit` 1–50, stable `next_cursor` |
-| `get_record` | `table`, `id` | one ledger row or one document by business id or `doc_id` |
-| `get_document` | `doc_id` | one invoice or payment document |
-| `calculator` | `expression` | safe decimal arithmetic with `+ - * /` and parentheses |
-| `submit` | `findings` | terminates the episode and is scored |
+| `list_records` | `table`, `cursor` (null on first page), `limit` | `{"records":[...],"next_cursor":null|string}`; `limit` 1–50, stable cursor |
+| `get_record` | `table`, `id` | one ledger row or document by business id or `doc_id` |
+| `get_document` | `doc_id` | one invoice or payment document via the documented interface |
+| `calculator` | `expression` | safe decimal arithmetic (`+ - * /` and parentheses), result as a decimal string |
+| `submit` | `findings` | terminates the episode; valid structure returns `{"accepted":true}`, otherwise a bounded structural error |
 
 An invalid action or unknown id returns a short error, consumes one step and does
 not reveal hidden data. There is no shell, SQL, filesystem or network access. The
 episode limit is 100 steps including `submit`; reaching the limit terminates with
-`truncated=True` and an empty answer.
+`truncated=True` and an empty answer. `submit` counts toward the 100-step budget
+but not toward `inspection_steps`; every other action including errors counts
+toward `inspection_steps`.
 
 ## Findings and matching
 
@@ -201,24 +212,38 @@ episode limit is 100 steps including `submit`; reaching the limit terminates wit
 ```
 
 The four types are `duplicate_invoice`, `payment_allocation_gap`, `fx_rate_error`
-and `period_cutoff`. Matching is one-to-one and requires all of:
+and `period_cutoff`. Official matching conventions (strict mode, used by the
+judge adapter):
 
-- the same type;
-- the exact canonical `affected_ids` set;
-- the same currency;
-- the claimed amount within ±1 minor unit of the expected amount;
-- at least one complete allowed evidence set (a superset is accepted). Every
-  shipped evidence set can be re-derived from the open records alone; for a
-  duplicate invoice it must include the invoice and every AR and revenue posting
-  for it, so the extra posting is provable against the original.
+- the same type — exact string, no synonyms or normalization;
+- the exact canonical `affected_ids` set — exact IDs, case and whitespace
+  significant, treated as a set (order and repeats do not matter);
+- the same currency — exact code as in `manifest`/`policy`/`truth`; no case
+  change, no trimming, no auto-conversion;
+- the claimed amount — a JSON integer (not bool/string/float) in minor units;
+  expected vs claimed within the documented tolerance `τ` per type (default
+  `τ = 0`, inclusive `abs(claimed - expected) <= τ`);
+- at least one complete allowed evidence set — every evidence id must exist in
+  the open data (ledger `row_id`, invoice `doc_id`/`invoice_id`, payment
+  `doc_id`/`payment_id`); a superset of an allowed set is accepted; a
+  nonexistent id makes the finding an FP, it never reveals unavailable data.
 
 Unmatched findings and repeated findings are false positives; missed issues are
 false negatives. Explanations are never scored, so persuasive text cannot change
-the result. Malformed structure terminates with reward `-1`.
+the result. Malformed structure (wrong value type, missing required field, more
+than 30 findings, more than 10 evidence ids in one finding, explanation over
+1000 characters) terminates the episode with reward `-1`.
 
-`P = TP/(TP+FP)`, `R = TP/(TP+FN)`, `F1 = 2TP/(2TP+FP+FN)`. A zero denominator
-gives 0. Empty truth with empty findings gives F1 = 1; empty truth with any finding
-gives F1 = 0.
+Matching uses a maximum-cardinality bipartite graph (every submitted finding is
+a separate vertex, repeats stay separate vertices); ties break by truth
+`issue_id` lexicographic order, then the lexicographically smallest sorted
+sequence of `(issue_id, finding index)` pairs. `P = TP/(TP+FP)`,
+`R = TP/(TP+FN)`, `F1 = 2TP/(2TP+FP+FN)`. A zero denominator gives 0. Empty
+truth with empty findings gives F1 = 1; empty truth with any finding gives F1 = 0.
+
+Limits checked first on raw structure, then on normalized sets: 31 findings, 11
+evidence ids in one finding, or an explanation over 1000 characters make the
+whole submission invalid with reward `-1`.
 
 ## Reward
 
@@ -234,6 +259,44 @@ reward is returned to the policy. In evaluation mode the environment returns
 `reward = 0.0` and no diagnostics; the evaluator keeps the real reward and metrics
 until the run ends. The environment object never receives truth: it holds only open
 data and a `finalize` callback owned by the runner.
+
+Numeric results (TP/FP/FN, money, steps) are exact integers; reported real values
+are compared with absolute tolerance `1e-9` (no relative tolerance) and are not
+rounded to 6 decimals in the official exact mode; the clip range is `[-1, 1]`.
+
+## Official judge adapter
+
+`judge_adapter.py` at the repository root is the thin adapter the Genesis FinTech
+jury uses. It wraps the existing LETRO generator and environment — it does not
+create a new task or choose actions for a policy.
+
+```python
+from judge_adapter import make_env, generate_episode, score_episode
+
+env = make_env()
+observation, info = env.reset(
+    seed=4242,
+    config={"mode": "train", "team_config": {}},
+)
+observation, reward, terminated, truncated, info = env.step(
+    {"name": "list_records", "args": {"table": "ledger", "limit": 50}}
+)
+```
+
+Entry points (exact signatures):
+
+| Entry point | Signature | Purpose |
+| --- | --- | --- |
+| `generate_episode` | `(seed: int, config: dict, output_dir: str) -> None` | Write one complete episode: open files plus closed `truth.json` and `provenance.json`. Wrapper over `letro.generator.generate_episode` plus `write_episode(include_closed=True)`. |
+| `make_env` | `() -> JudgeEnv` | Construct the canonical environment exposed to a jury policy. |
+| `score_episode` | `(episode_dir: str, findings: dict, inspection_steps: int) -> dict` | Judge-side scoring: strict validation, strict matcher with available evidence, exact (unrounded) reward. Returns `{"tp","fp","fn","precision","recall","f1","return"}`; invalid submission returns `return=-1` with all metrics null. |
+
+`JudgeEnv.reset(seed, config)` supports two modes:
+
+- `mode="train"`: generates a fresh episode from `seed`/`team_config`; used for training and for closed-mode `team_config` expansion.
+- `mode="closed"`: requires `config={"mode":"closed","episode_dir":"<dir>","team_config":{...}}`; loads exactly that episode via `letro.generator.load_episode` and never regenerates or renames IDs. Repeated `reset` restarts the same episode.
+
+`JudgeEnv.step(action)` takes the canonical envelope `{"name":"<action>","args":{...}}` with names `list_records`, `get_record`, `get_document`, `calculator`, `submit`, and returns `{"result":...,"error":...,"remaining_steps":...}` later observations; the first observation is `{"task","manifest","policy","remaining_steps"}`. In closed mode `reward` is `0` and no metrics or truth reach the policy. A wall-clock deadline of 60 seconds from `reset` returns `truncated=True` with an empty answer and error code `time_limit`.
 
 ## Baselines
 
@@ -277,6 +340,35 @@ invoice, payment, ledger row and document id is renamed, all tables are shuffled
 and truth is rebuilt from the transformed open files. The oracle answer and reward
 must be preserved, which they are for all 20 paired checks.
 
+## Generator config keys for the official checklist
+
+The generator accepts documented keys so the jury can reproduce every required
+scenario deterministically (defaults preserve current behavior):
+
+| Key | Values | Default | Purpose |
+| --- | --- | --- | --- |
+| `gap_mode` | `partial` \| `missing` \| `mixed` | `partial` | How a payment allocation gap is injected. `missing` removes the whole AR credit and posts the full amount to suspense (full missing allocation); `partial` reduces AR credit by 40%; `mixed` chooses randomly. |
+| `composite_scenario` | `alternate` \| `first` \| `second` \| `both` | `alternate` | Which documented interaction scenario is used for `composite` episodes. `second` alone is independently selectable. |
+| `split_payment` | boolean | `true` | Allow split payments (D02-style). |
+| `refund` | boolean | `true` | Allow refunds (D03-style). |
+| `recurring` | boolean | `true` | Allow recurring expenses (D05-style legitimately repeating amounts). |
+
+Unknown top-level config keys are rejected at validation time.
+
+## Official Genesis FinTech checklist mapping
+
+| Checklist block | Points | What it tests | LETRO status |
+| --- | --- | --- | --- |
+| Block 1 — Contract tests (C01–C20) | 25 | Reset, first/later observation, manifest, paged `list_records`, `get_record`/`get_document`, `calculator` restriction, bounded errors, `submit` semantics, 100-step budget, 60 s wall clock, closed-mode reward isolation | Implemented via `judge_adapter.py`; full verifier 100/100 plus 12 adapter tests. |
+| Block 2 — Closed episodes (D01–D20) | 25 | Clean, split payment, refund, repeating amounts, currency/period boundary, duplicate invoices, missing/partial allocation, FX/date errors, period errors, two documented interaction scenarios | Generator knobs (`gap_mode`, `composite_scenario`, `split_payment`, `refund`, `recurring`) make every scenario independently selectable. |
+| Block 3 — Matcher/reward (20 unit tests + M01–M12) | 25 | Exact IDs/currency/amount/evidence, `τ` default 0, max-cardinality matching with deterministic tie-break, structural limits (30/10/1000), `1e-9` numeric tolerance, clip `[-1,1]`, unknown type → FP not crash | Strict matcher/validator/reward path; 32 official/example tests all pass. |
+| Block 4 — Pair checks (P01–P20) | 15 | Record reorder + bijective ID replacement on both sides; oracle correctness after inverse ID mapping; reproduction from same seed/config | `load_episode` loads transformed `episode_dir`; truth/provenance rebuilt in the closed evaluator process; all 20 paired checks pass. |
+| Engineering anchors (5 × 0/1/2) | 10 | One launch command, versioned config/dependencies, `trajectories.jsonl` with §09 fields, measured failure analysis, honest limitations | Documented one command (`python -m letro.verify`), CI workflow, 500-record trajectories, `docs/FAILURE-ANALYSIS.md` with measured bugs and fixes, Limitations section. |
+
+Total official checklist score: 100 points. Project self-verifier (`python -m
+letro.verify`) is a separate, self-defined rubric (also 100/100) and does not
+replace the official jury checks.
+
 ## Continuous integration and runbook
 
 `.github/workflows/ci.yml` runs the tests, the verifier, the jury harness and the
@@ -302,7 +394,7 @@ letro/challenge.py     sanitized submission scorer (aggregates only, no truth)
 scripts/               episode build, trajectory recording, policy metrics, demo
 episodes/train|dev/    10 + 10 open episodes with closed labels
 trajectories/          recorded runs and summary
-tests/                 134 unit and integration tests
+tests/                 190 unit and integration tests
 docs/                  design, failure analysis, readiness, runbook, evidence
 ```
 
